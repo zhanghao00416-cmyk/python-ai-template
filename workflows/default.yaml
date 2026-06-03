@@ -1,0 +1,31 @@
+# Default platform workflow
+# Status: placeholder — Phase 1 implement
+# Skill model: docs/02-engineering/TOOLS_MCP_SPEC.md
+# Workflow spec: docs/02-engineering/WORKFLOW_SPEC.md
+
+id: default_qa
+description: "General Q&A with optional knowledge retrieval via rag_answer skill"
+
+match:
+  intents:
+    - qa
+    - chat
+    - task
+
+steps:
+  - id: policy
+    agent: planner
+    skills: []
+    tools: []
+
+  - id: retrieve
+    agent: researcher
+    skills:
+      - rag_answer
+    tools: []
+    when: "{{ steps.policy.need_rag }}"
+
+  - id: answer
+    agent: synthesizer
+    skills: []
+    tools: []

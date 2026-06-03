@@ -1,0 +1,156 @@
+server:
+  host: "0.0.0.0"
+  port: 6006
+  debug: false
+  debug_sse_output: false
+
+database:
+  url: "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_platform"
+  pool_size: 10
+  max_overflow: 20
+
+redis:
+  url: "redis://localhost:6379/0"
+  default_ttl: 3600
+
+security:
+  enable_auth: true
+  api_key: ""
+  jwt_secret: ""
+  jwt_algorithm: "HS256"
+  max_body_size: 10485760
+
+logging:
+  level: "INFO"
+  format: "json"
+  otel_enabled: false
+  otel_endpoint: "http://localhost:4317"
+
+text_model:
+  text_model_provider: "qwen_cloud"
+  qwen_api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  qwen_model_name: "qwen-plus"
+  text_vllm_base_url: ""
+  text_vllm_model: "Qwen3.5-9B"
+  text_timeout: 120
+  task_provider:
+    intent: ""
+    rag_rewrite: ""
+    rag_merge: ""
+    final: ""
+    chat: ""
+
+vision_model:
+  vision_provider: "qwen_cloud"
+  vllm_base_url: ""
+  vllm_model: "Qwen3.5-9B"
+  vllm_api_key: ""
+  vision_timeout: 120
+  image_max_pixels: 524288
+  image_min_dim: 224
+  download_timeout: 30
+  qwen_vision_model_name: "qwen-vl-plus"
+
+embedding:
+  base_url: ""
+  model: "bge-m3"
+  dim: 1024
+  distance: "Cosine"
+  timeout: 60
+  embedding_provider: "qwen_cloud"
+  qwen_embedding_model_name: "text-embedding-v3"
+  vllm_api_key: ""
+  batch_size: 10
+  max_chunks: 100
+  default_chunk_size: 500
+  default_chunk_overlap: 50
+
+qdrant:
+  url: "http://localhost:6333"
+  timeout: 30
+  sparse_vector_name: "bm25"
+
+concurrency:
+  llm_semaphore_size: 20
+  vision_semaphore_size: 10
+  video_semaphore_size: 6
+  embedding_semaphore_size: 20
+  semaphore_acquire_timeout: 120
+
+knowledge:
+  collections:
+    - name: "ai_knowledge"
+      description: "通用知识库"
+      vector_dim: 1024
+      distance: "Cosine"
+      sparse_vector: true
+      types:
+        - name: "hazard"
+          description: "安全隐患"
+        - name: "general"
+          description: "通用知识"
+        - name: "policy"
+          description: "政策法规"
+      default_type: "general"
+      chunk_size: 500
+      chunk_overlap: 50
+
+    - name: "product_manual"
+      description: "产品手册"
+      vector_dim: 1024
+      distance: "Cosine"
+      sparse_vector: true
+      types:
+        - name: "specification"
+          description: "产品规格"
+        - name: "faq"
+          description: "常见问题"
+        - name: "troubleshooting"
+          description: "故障排除"
+      default_type: "faq"
+      chunk_size: 800
+      chunk_overlap: 100
+
+  retrieval:
+    default_top_k: 3
+    default_score_threshold: 0.5
+    enable_hybrid: true
+    hybrid_alpha: 0.7
+    enable_rerank: false
+
+context:
+  history_max_rounds: 5
+  max_context_tokens: 4096
+
+agent:
+  max_iterations: 10
+  planning_prompt: "agent/planning"
+  synthesis_prompt: "agent/synthesis"
+
+workflow:
+  max_concurrent_nodes: 5
+
+task_queue:
+  redis_queue_name: "arq:tasks"
+  max_retries: 3
+  retry_delay: 60
+
+safety:
+  safety_keywords: ""
+  entity_max_count: 3
+  hazard_max_count: 3
+
+sse:
+  heartbeat_interval: 15
+
+circuit_breaker:
+  failure_threshold: 5
+  recovery_timeout: 30
+  half_open_max_calls: 1
+
+prompt_config:
+  prompts_dir: "./prompts"
+  prompts_default_dir: "./prompts/prompts_default"
+
+json_repair:
+  enabled: true

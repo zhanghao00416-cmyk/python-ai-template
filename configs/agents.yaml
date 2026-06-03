@@ -1,0 +1,36 @@
+agents:
+  general_chat:
+    description: "通用对话助手"
+    system_prompt: "chat/general_chat"
+    max_iterations: 10
+    tools: []
+
+  rag_agent:
+    description: "RAG 知识库问答"
+    system_prompt: "rag/rag_answer"
+    max_iterations: 5
+    tools: ["knowledge_search", "context_lookup"]
+
+  intent_classifier:
+    description: "意图识别"
+    system_prompt: "intent/intent_routing"
+    max_iterations: 1
+    tools: []
+
+  safety_inspector:
+    description: "安全隐患识别"
+    system_prompt: "vision/hazard_recognition"
+    max_iterations: 3
+    tools: ["vision_analyze", "knowledge_search"]
+
+  entity_recognizer:
+    description: "实体识别"
+    system_prompt: "vision/entity_recognition"
+    max_iterations: 3
+    tools: ["vision_analyze"]
+
+orchestrator:
+  default_strategy: "orchestrator"
+  planning_prompt: "agent/planning"
+  synthesis_prompt: "agent/synthesis"
+  max_sub_agents: 5

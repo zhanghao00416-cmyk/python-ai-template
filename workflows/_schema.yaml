@@ -1,0 +1,30 @@
+# Workflow YAML schema (documentation only — not loaded at runtime)
+#
+# See docs/02-engineering/WORKFLOW_SPEC.md and docs/02-engineering/TOOLS_MCP_SPEC.md
+
+required_top_level:
+  - id
+  - steps
+
+fields:
+  id:
+    type: string
+    description: Unique workflow identifier
+  description:
+    type: string
+    optional: true
+  match:
+    type: object
+    optional: true
+    properties:
+      intents:
+        type: list
+        description: Intent names from IntentRouter
+  steps:
+    type: list
+    items:
+      id: string
+      agent: string
+      skills: list   # optional Runtime Skill ids (skills/*.yaml)
+      tools: list    # optional direct Tool names (union with skill tools)
+      when: string   # optional conditional expression (Phase 3)

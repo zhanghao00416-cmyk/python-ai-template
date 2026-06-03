@@ -1,0 +1,74 @@
+# --- Python build / cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# --- Virtual env ---
+.venv/
+venv/
+env/
+TestNewHarness/.venv/
+
+# --- Secrets ---
+# .env  intentionally tracked in git (team policy); use private remote if keys inside
+.env.local
+.env.*.local
+configs/override.yaml
+secrets/*
+!secrets/README.md
+
+# --- IDE ---
+.vscode/
+.idea/
+.cursor/
+TestNewHarness/.cursor/
+*.swp
+*.swo
+*~
+
+# --- Test / lint caches ---
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+TestNewHarness/.pytest_cache/
+TestNewHarness/.ruff_cache/
+
+# --- Logs & temp ---
+*.log
+*.tmp
+.tmp_*
+*.bak
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Generated at runtime ---
+system-state.json
+
+# --- Local runtime data (optional: remove lines to track in git) ---
+data/*
+!data/.gitkeep
+qdrant_data/
+postgres_data/
+redis_data/
+
+# --- Alembic pycache ---
+migrations/versions/__pycache__/
+TestNewHarness/**/__pycache__/
+
+# --- Nested git (reference product repo) ---
+TestNewHarness/.git/
+
+# --- Reference product tree (optional: delete this line to track TestNewHarness) ---
+TestNewHarness/

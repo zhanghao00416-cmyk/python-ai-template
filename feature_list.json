@@ -1,0 +1,191 @@
+{
+  "project": "python-ai-template",
+  "description": "通用 Python AI 项目模板，14 项可复用能力",
+  "current_phase": 1,
+  "features": [
+    {
+      "id": "F01",
+      "name": "项目骨架 + FastAPI 入口 + DI 容器 + YAML 配置",
+      "behavior": "FastAPI 启动，/health 返回 200，DI 容器可用，YAML 配置加载成功",
+      "verification": "curl http://localhost:6006/api/v1/health && pytest tests/test_01_skeleton.py",
+      "state": "passing",
+      "evidence": "12/12 tests pass; health endpoint returns 200; DI container register/resolve/override/reset/cleanup works; YAML config loads with correct defaults; architecture check passed"
+    },
+    {
+      "id": "F02",
+      "name": "数据库模型 + Alembic 迁移 + Redis 连接",
+      "behavior": "PG 表创建成功，Redis ping 返回 pong，Alembic 迁移可执行",
+      "verification": "pytest tests/test_02_database.py && alembic upgrade head",
+      "state": "in_progress",
+      "evidence": ""
+    },
+    {
+      "id": "F03",
+      "name": "错误体系 + 统一响应 + 中间件",
+      "behavior": "错误请求返回结构化 JSON（含 code/message/request_id），trace_id 贯穿请求",
+      "verification": "pytest tests/test_03_error_middleware.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F04",
+      "name": "LLM Gateway（策略模式）",
+      "behavior": "LLM 调用统一经 gateway，支持 qwen_cloud/vllm 双通道切换，stream/non-stream 统一方法",
+      "verification": "pytest tests/test_04_llm_gateway.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F05",
+      "name": "向量库抽象 + Qdrant 适配",
+      "behavior": "多集合创建/删除，文档插入/检索/删除，混合检索（稠密+稀疏）",
+      "verification": "pytest tests/test_05_vector_store.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F06",
+      "name": "SSE 流式服务 + 心跳/断连",
+      "behavior": "SSE 端点推送完整事件流（start/intent/chunk/citation/heartbeat/progress/usage/done/error）",
+      "verification": "pytest tests/test_06_sse_stream.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F07",
+      "name": "异步任务队列（ARQ）+ 统一任务查询",
+      "behavior": "提交长任务返回 task_id，统一查询接口覆盖 Agent/Workflow/KB上传/自定义任务",
+      "verification": "pytest tests/test_07_task_queue.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F08",
+      "name": "Prompt 管理器 + 模板渲染 + 版本管理",
+      "behavior": "查询/修改 prompt 文件，版本历史记录，回滚指定版本，重置基准副本，模板变量替换，启动时预加载",
+      "verification": "pytest tests/test_08_prompt_manager.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F09",
+      "name": "上下文管理器（会话/消息/窗口截取）",
+      "behavior": "创建 session → 追加 message → 获取上下文窗口（按 token 数截取）",
+      "verification": "pytest tests/test_09_context_manager.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F10",
+      "name": "Tools 注册中心 + MCP 适配器 + Skills",
+      "behavior": "注册 tool/skill → 通过 registry 调用 → MCP 协议返回结果 → skill 遮蔽 tool 互斥",
+      "verification": "pytest tests/test_10_tools_registry.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F11",
+      "name": "Agent 基类 + 状态机 + ReAct 循环 + 三引擎（react/workflow/orchestrator）",
+      "behavior": "Agent 执行 3 步 tool/skill 调用，轨迹记录完整（IDLE→THINKING→ACTING→OBSERVING→DONE），支持 react/workflow/orchestrator 三种引擎",
+      "verification": "pytest tests/test_11_agent.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F12",
+      "name": "多 Agent 协作（Orchestrator 模式）",
+      "behavior": "Orchestrator 分配 3 个子 agent 任务 → 汇总结果，轨迹记录完整",
+      "verification": "pytest tests/test_12_multi_agent.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F13",
+      "name": "Workflow DAG 引擎",
+      "behavior": "3 节点 DAG 执行，条件边路由正确，StateGraph 流转正常",
+      "verification": "pytest tests/test_13_workflow.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F14",
+      "name": "Chat 对话域（自动创建会话+SSE/同步双模式）",
+      "behavior": "POST /api/v1/chat SSE 流完整（start→chunk→usage→done），自动创建会话，支持同步模式，上下文窗口自动截取",
+      "verification": "pytest tests/test_14_chat.py && curl SSE 端点完整流",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F15a",
+      "name": "知识库集合+文档管理（4种分块+父子模式+3元数据+清库确认）",
+      "behavior": "创建集合→上传文档（4种分块+父子分块模式+3元数据+异步）→多维过滤查看→条件删除+一键清库",
+      "verification": "pytest tests/test_15a_knowledge_docs.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F15b",
+      "name": "知识库RAG查询（4种召回策略+rerank+父子上下文返回）",
+      "behavior": "RAG查询（4种召回+rerank+父子上下文）→SSE/同步双模式→citation+retrieval_results返回",
+      "verification": "pytest tests/test_15b_knowledge_rag.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F15c",
+      "name": "知识库端到端联调",
+      "behavior": "创建集合→上传文档→RAG查询→删除文档/集合 全流程端到端验证",
+      "verification": "pytest tests/test_15c_knowledge_e2e.py && curl 全流程",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F16",
+      "name": "意图识别域（三层分类+多意图）",
+      "behavior": "POST /api/v1/intent 三层漏斗（关键字→相似度→LLM），多意图检测+query重组，返回主意图+子意图",
+      "verification": "pytest tests/test_16_intent.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F17",
+      "name": "Prompt 管理 API（查询+修改+版本历史+重置）",
+      "behavior": "查询模板（分页过滤+详情），修改模板（自动版本+回滚），版本历史列表，重置基准版本",
+      "verification": "pytest tests/test_17_prompt_admin.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F18",
+      "name": "可观测性体系（Tracing + Token 统计 + 指标）",
+      "behavior": "执行请求→日志含 trace_id+token_usage+latency，/metrics 暴露 Prometheus 指标（LLM/HTTP/KB/Agent 10项指标）",
+      "verification": "pytest tests/test_18_observability.py && curl /metrics",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F19",
+      "name": "评估框架",
+      "behavior": "运行评估→输出对话质量分数+Agent 轨迹报告",
+      "verification": "pytest tests/test_19_eval.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F20",
+      "name": "认证 + 限流中间件",
+      "behavior": "未认证请求返回 401，超频请求返回 429，Redis 限流生效",
+      "verification": "pytest tests/test_20_auth_ratelimit.py",
+      "state": "not_started",
+      "evidence": ""
+    },
+    {
+      "id": "F21",
+      "name": "端到端联调 + Docker + 生产就绪",
+      "behavior": "docker-compose up → 全 API 可调通 → feature_list.json 全部 passing",
+      "verification": "docker-compose up -d && curl 全端点 && bash init.sh",
+      "state": "not_started",
+      "evidence": ""
+    }
+  ]
+}

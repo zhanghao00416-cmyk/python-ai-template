@@ -1,0 +1,30 @@
+# Runtime Skill declaration schema (documentation only)
+# See docs/02-engineering/TOOLS_MCP_SPEC.md
+
+required:
+  - id
+  - prompt
+  - tools
+
+fields:
+  id:
+    type: string
+  description:
+    type: string
+    optional: true
+  prompt:
+    type: string
+    description: Path to prompts/skills/{name}.md
+  tools:
+    type: list
+    description: Tool names from ToolRegistry
+  kb_scope:
+    type: object
+    optional: true
+  constraints:
+    type: object
+    optional: true
+  execution:
+    type: string
+    enum: [fixed, llm_select]
+    default: fixed

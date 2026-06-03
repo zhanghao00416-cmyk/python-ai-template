@@ -1,0 +1,48 @@
+providers:
+  qwen_cloud:
+    type: "openai_compatible"
+    api_base: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    api_key_env: "QWEN_API_KEY"
+
+  vllm:
+    type: "openai_compatible"
+    api_base_env: "VLLM_BASE_URL"
+    api_key_env: "VLLM_API_KEY"
+
+routing:
+  intent:
+    provider: "qwen_cloud"
+    model: "qwen-plus"
+    timeout: 60
+
+  rag_rewrite:
+    provider: "qwen_cloud"
+    model: "qwen-plus"
+    timeout: 60
+
+  rag_merge:
+    provider: "qwen_cloud"
+    model: "qwen-plus"
+    timeout: 120
+
+  final:
+    provider: "qwen_cloud"
+    model: "qwen-plus"
+    timeout: 120
+    stream: true
+
+  chat:
+    provider: "qwen_cloud"
+    model: "qwen-plus"
+    timeout: 120
+    stream: true
+
+  multimodal:
+    provider: "qwen_cloud"
+    model: "qwen-vl-plus"
+    timeout: 120
+
+  embedding:
+    provider: "qwen_cloud"
+    model: "text-embedding-v3"
+    timeout: 60

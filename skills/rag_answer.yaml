@@ -1,0 +1,12 @@
+# Built-in skill example — Phase 1 implement
+id: rag_answer
+description: "Retrieve from knowledge base and generate grounded answer"
+prompt: prompts/skills/rag_answer.md
+tools:
+  - retrieve_knowledge
+kb_scope:
+  collection: null
+  filter: {}
+constraints:
+  max_citations: 3
+execution: fixed
