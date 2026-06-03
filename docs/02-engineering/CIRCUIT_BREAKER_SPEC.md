@@ -77,7 +77,7 @@ sem_mgr = get_semaphore_manager()
 async with sem_mgr.acquire("llm"):
     result = await gateway.text_chat(messages, stream=False)
 
-# 超时未获取信号量 → BusinessException(AI_0004, "并发超限，请稍后重试")
+# 超时未获取信号量 → AppError(AI_0004, "并发超限，请稍后重试")
 ```
 
 ### 信号量命名

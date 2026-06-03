@@ -1,53 +1,53 @@
-# Security Policy
+# 安全策略
 
-## Overview
+## 概述
 
-This document defines the security model for the Python AI Template, covering authentication, rate limiting, input validation, and data protection. Security enforcement is configured in `app/middleware/`.
+本文档定义了 Python AI 模板的安全模型，涵盖认证、限流、输入验证和数据保护。安全强制配置位于 `app/middleware/`。
 
-## Authentication — [TBD: filled by F20]
+## 认证 — [TBD: filled by F20]
 
-### API Key Authentication
+### API 密钥认证
 
 ```python
-# Header-based API key
+# 基于请求头的 API 密钥
 X-API-Key: <api_key>
 ```
 
-- API keys are stored as hashed values in configuration
-- Key validation occurs in `app/middleware/auth.py`
-- Authentication can be disabled via config (`AUTH_ENABLED: false`) for development
-- When disabled, a default `user_id` is used from `X-User-Id` header or config
+- API 密钥以哈希值形式存储在配置中
+- 密钥验证在 `app/middleware/auth.py` 中执行
+- 开发环境下可通过配置 (`AUTH_ENABLED: false`) 禁用认证
+- 禁用时，使用 `X-User-Id` 请求头或配置中的默认 `user_id`
 
-### Key Storage — [TBD: filled by F20]
+### 密钥存储 — [TBD: filled by F20]
 
-- Production: Environment variables or Docker Secrets (`${API_KEYS}`)
-- Development: `.env` file
-- Keys are never stored in YAML config files or committed to version control
+- 生产环境：环境变量或 Docker Secrets (`${API_KEYS}`)
+- 开发环境：`.env` 文件
+- 密钥绝不存储在 YAML 配置文件中，也不提交至版本控制
 
-### Auth Middleware — [TBD: filled by F20]
+### 认证中间件 — [TBD: filled by F20]
 
 ```python
 class AuthMiddleware:
     async def __call__(self, request: Request, call_next: Callable):
         """
-        1. Check if auth is enabled (config)
-        2. Extract X-API-Key header
-        3. Validate against configured keys
-        4. If invalid: return 401 {code: 1001, message: "Unauthorized"}
-        5. If valid: set request.state.user_id and continue
+        1. 检查认证是否启用（配置）
+        2. 提取 X-API-Key 请求头
+        3. 与已配置的密钥进行验证
+        4. 若无效：返回 401 {code: 1001, message: "Unauthorized"}
+        5. 若有效：设置 request.state.user_id 并继续
         """
 ```
 
-### Exempt Endpoints — [TBD: filled by F20]
+### 豁免端点 — [TBD: filled by F20]
 
-| Endpoint | Reason |
-|----------|--------|
-| GET /api/v1/health | Health check |
-| GET /metrics | Prometheus metrics |
+| 端点 | 原因 |
+|------|------|
+| GET /api/v1/health | 健康检查 |
+| GET /metrics | Prometheus 指标 |
 
-## Rate Limiting — [TBD: filled by F20]
+## 限流 — [TBD: filled by F20]
 
-### Redis-Based Rate Limiting
+### 基于 Redis 的限流
 
 ```python
 class RateLimiter:
@@ -57,20 +57,20 @@ class RateLimiter:
 
     async def check(self, key: str) -> bool:
         """
-        Sliding window rate limit using Redis INCR + EXPIRE.
+        使用 Redis INCR + EXPIRE 实现滑动窗口限流。
         Key: rate_limit:{api_key}:{window}
-        Returns True if under limit, False if over limit.
+        未超限返回 True，超限返回 False。
         """
 ```
 
-### Configuration — [TBD: filled by F20]
+### 配置 — [TBD: filled by F20]
 
 ```yaml
 rate_limit:
   enabled: true
   default:
-    requests: 100         # Max requests per window
-    window_seconds: 60    # Window duration
+    requests: 100         # 每个窗口最大请求数
+    window_seconds: 60    # 窗口时长
   endpoints:
     /api/v1/chat:
       requests: 30
@@ -80,9 +80,9 @@ rate_limit:
       window_seconds: 60
 ```
 
-### Rate Limit Response — [TBD: filled by F20]
+### 限流响应 — [TBD: filled by F20]
 
-When rate limit is exceeded:
+超出限流时：
 
 ```json
 {
@@ -93,15 +93,15 @@ When rate limit is exceeded:
 }
 ```
 
-HTTP status: 429 Too Many Requests.
+HTTP 状态码：429 Too Many Requests。
 
-Headers: `Retry-After: 30`, `X-RateLimit-Limit: 100`, `X-RateLimit-Remaining: 0`.
+响应头：`Retry-After: 30`、`X-RateLimit-Limit: 100`、`X-RateLimit-Remaining: 0`。
 
-## Input Validation — [TBD: filled by F03]
+## 输入验证 — [TBD: filled by F03]
 
-### Pydantic Schemas
+### Pydantic 模式
 
-All API inputs are validated through Pydantic models in `app/schemas/`:
+所有 API 输入均通过 `app/schemas/` 中的 Pydantic 模型进行验证：
 
 ```python
 class ChatRequest(BaseModel):
@@ -111,36 +111,36 @@ class ChatRequest(BaseModel):
     stream: bool = True
 ```
 
-### Validation Rules — [TBD: filled by F03]
+### 验证规则 — [TBD: filled by F03]
 
-| Field | Rule |
-|-------|------|
-| Message text | Max 10,000 characters, no raw HTML |
-| Session ID | Valid UUID format |
-| Collection name | Alphanumeric + underscore, max 64 chars |
-| Document content | Max 5MB per upload |
-| Prompt name | Alphanumeric + underscore, max 128 chars |
+| 字段 | 规则 |
+|------|------|
+| 消息文本 | 最多 10,000 字符，不允许原始 HTML |
+| 会话 ID | 有效的 UUID 格式 |
+| 集合名称 | 字母数字 + 下划线，最多 64 字符 |
+| 文档内容 | 每次上传最大 5MB |
+| 提示词名称 | 字母数字 + 下划线，最多 128 字符 |
 
-### Output Sanitization — [TBD: filled by F03]
+### 输出清洗 — [TBD: filled by F03]
 
-- No raw stack traces in API responses
-- Error messages are mapped through the error code system
-- LLM output is not sanitized (trust model output for this template)
+- API 响应中不包含原始堆栈跟踪
+- 错误消息通过错误码系统映射
+- LLM 输出不做清洗（本模板信任模型输出）
 
-## Request Context Propagation — [TBD: filled by F03]
+## 请求上下文传播 — [TBD: filled by F03]
 
-Every request must carry:
+每个请求必须携带：
 
-| Header | Source | Propagated To |
-|--------|--------|--------------|
-| `X-Trace-Id` | Auto-generated or client | All logs, DB records |
-| `X-Request-Id` | Auto-generated UUID | All logs, error responses |
-| `X-User-Id` | Auth middleware | All logs, DB records |
-| `X-Session-Id` | Client request | All logs, message records |
+| 请求头 | 来源 | 传播至 |
+|--------|------|--------|
+| `X-Trace-Id` | 自动生成或客户端 | 所有日志、数据库记录 |
+| `X-Request-Id` | 自动生成的 UUID | 所有日志、错误响应 |
+| `X-User-Id` | 认证中间件 | 所有日志、数据库记录 |
+| `X-Session-Id` | 客户端请求 | 所有日志、消息记录 |
 
-These are set via `app/middleware/trace.py` and accessible through `contextvars`.
+这些通过 `app/middleware/trace.py` 设置，并通过 `contextvars` 访问。
 
-## CORS — [TBD: filled by F01]
+## 跨域资源共享 (CORS) — [TBD: filled by F01]
 
 ```python
 app.add_middleware(
@@ -151,18 +151,18 @@ app.add_middleware(
 )
 ```
 
-## Data Protection — [TBD: filled by F20]
+## 数据保护 — [TBD: filled by F20]
 
-- No secrets in YAML config files (use `.env` or Docker Secrets)
-- API keys hashed before comparison
-- No PII logged (user_id is opaque identifier)
-- SSE streams do not expose internal error details
-- Redis keys have TTL (no indefinite data retention)
+- YAML 配置文件中不含密钥（使用 `.env` 或 Docker Secrets）
+- API 密钥比较前先进行哈希处理
+- 不记录个人身份信息（user_id 为不透明标识符）
+- SSE 流不暴露内部错误细节
+- Redis 键设有 TTL（无无限期数据保留）
 
-## Security Headers — [TBD: filled by F01]
+## 安全响应头 — [TBD: filled by F01]
 
-| Header | Value |
-|--------|-------|
+| 响应头 | 值 |
+|--------|-----|
 | X-Content-Type-Options | nosniff |
 | X-Frame-Options | DENY |
 | Content-Security-Policy | default-src 'none' |

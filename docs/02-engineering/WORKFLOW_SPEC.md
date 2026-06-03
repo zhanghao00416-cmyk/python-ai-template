@@ -1,36 +1,36 @@
-# Workflow Engine Specification
+# Workflow 引擎规范
 
-## Overview
+## 概述
 
-The Workflow engine (`app/workflow/`) provides a StateGraph-based DAG execution engine independent of business domains. It supports both programmatic graph construction and YAML-based declarative workflow definitions.
+Workflow 引擎（`app/workflow/`）提供基于 StateGraph 的 DAG 执行引擎，独立于业务领域。它同时支持编程式图构建和基于 YAML 的声明式工作流定义。
 
-Domains define workflow graphs; the engine executes them with node functions, conditional edges, concurrent branches, and state management.
-
----
-
-## 1. Two Workflow Definition Modes
-
-| Mode | Configuration | Use Case |
-|------|---------------|----------|
-| **Programmatic** | Python `StateGraph` API | Complex logic, custom conditions |
-| **Declarative** | `workflows/*.yaml` | Standard flows, project-customizable |
-
-Both modes share the same execution engine and state management.
+各领域定义工作流图；引擎通过节点函数、条件边、并发分支和状态管理来执行它们。
 
 ---
 
-## 2. YAML Declarative Workflow
+## 1. 两种工作流定义模式
 
-### 2.1 Directory Structure
+| 模式 | 配置方式 | 适用场景 |
+|------|----------|----------|
+| **编程式** | Python `StateGraph` API | 复杂逻辑、自定义条件 |
+| **声明式** | `workflows/*.yaml` | 标准流程、项目可定制 |
+
+两种模式共享相同的执行引擎和状态管理。
+
+---
+
+## 2. YAML 声明式工作流
+
+### 2.1 目录结构
 
 ```
 workflows/
-├── _schema.yaml          # Schema documentation
-├── default.yaml          # Default Q&A workflow
-└── (project-specific workflows)
+├── _schema.yaml          # Schema 文档
+├── default.yaml          # 默认问答工作流
+└── (项目特定工作流)
 ```
 
-### 2.2 Workflow YAML Format
+### 2.2 工作流 YAML 格式
 
 ```yaml
 # workflows/default.yaml
@@ -62,38 +62,38 @@ steps:
     tools: []
 ```
 
-### 2.3 Step Fields
+### 2.3 步骤字段
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique step identifier within workflow |
-| `agent` | Yes | Agent name from `AgentRegistry` (maps to `prompts/agents/{name}.md`) |
-| `skills` | No | List of Skill IDs to equip (union with `tools`) |
-| `tools` | No | List of bare Tool names to equip |
-| `when` | No | Conditional expression (Phase 3+) |
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `id` | 是 | 工作流内唯一步骤标识符 |
+| `agent` | 是 | 来自 `AgentRegistry` 的 Agent 名称（映射到 `prompts/agents/{name}.md`） |
+| `skills` | 否 | 要装备的 Skill ID 列表（与 `tools` 取并集） |
+| `tools` | 否 | 要装备的工具名称列表 |
+| `when` | 否 | 条件表达式（阶段 3+） |
 
-### 2.4 Execution Semantics
+### 2.4 执行语义
 
-| Phase | Supports |
-|-------|----------|
-| Phase 1 | Linear `steps` only |
-| Phase 2 | `when` conditional branching |
-| Phase 3 | `parallel` concurrent steps, `llm_select` skill execution |
+| 阶段 | 支持 |
+|------|------|
+| 阶段 1 | 仅线性 `steps` |
+| 阶段 2 | `when` 条件分支 |
+| 阶段 3 | `parallel` 并发步骤、`llm_select` 技能执行 |
 
-### 2.5 Match Rules
+### 2.5 匹配规则
 
-When `POST /run` receives a request, the orchestrator:
+当 `POST /run` 收到请求时，编排器：
 
-1. Classifies intent via `IntentRouter`
-2. Matches intent against all `workflows/*.yaml` `match.intents`
-3. Falls back to `default_qa` if no match
-4. Executes matched workflow steps
+1. 通过 `IntentRouter` 分类意图
+2. 将意图与所有 `workflows/*.yaml` 的 `match.intents` 进行匹配
+3. 若无匹配则回退到 `default_qa`
+4. 执行匹配的工作流步骤
 
 ---
 
-## 3. Programmatic StateGraph — [TBD: filled by F13]
+## 3. 编程式 StateGraph — [TBD: filled by F13]
 
-### 3.1 Core Concepts
+### 3.1 核心概念
 
 ```python
 class StateGraph:
@@ -110,7 +110,7 @@ class StateGraph:
     state_schema: type[TypedDict]
 ```
 
-### 3.2 Node Function
+### 3.2 节点函数
 
 ```python
 async def node_function(state: StateSchema) -> dict:
@@ -121,12 +121,12 @@ async def node_function(state: StateSchema) -> dict:
     return {"field_to_update": new_value}
 ```
 
-### 3.3 Edge Types
+### 3.3 边类型
 
-| Type | Description |
-|------|-------------|
-| Fixed edge | Unconditional: A → B always |
-| Conditional edge | Route based on state: A → condition(state) → B or C |
+| 类型 | 说明 |
+|------|------|
+| 固定边 | 无条件：A → B 始终执行 |
+| 条件边 | 基于状态路由：A → condition(state) → B 或 C |
 
 ```python
 def route_intent(state) -> str:
@@ -140,39 +140,39 @@ def route_intent(state) -> str:
 
 ---
 
-## 4. DAG Execution — [TBD: filled by F13]
+## 4. DAG 执行 — [TBD: filled by F13]
 
-### 4.1 Execution Model
+### 4.1 执行模型
 
-1. Initialize state from input
-2. Start at `entry_point` node (or first YAML step)
-3. Execute node function → merge result into state
-4. Follow edges (evaluate conditional edges if present)
-5. If parallel edges exist, execute target nodes concurrently (bounded by `workflow.max_concurrent_nodes`)
-6. Repeat until reaching a terminal node
-7. Return final state
+1. 从输入初始化状态
+2. 从 `entry_point` 节点开始（或第一个 YAML 步骤）
+3. 执行节点函数 → 将结果合并到状态
+4. 沿边推进（如有条件边则评估）
+5. 若存在并行边，并发执行目标节点（受 `workflow.max_concurrent_nodes` 限制）
+6. 重复直到到达终端节点
+7. 返回最终状态
 
-### 4.2 Parallel Execution
+### 4.2 并行执行
 
 ```
-       [A]
-      / | \
-    [B] [C] [D]   ← executed in parallel
-      \ | /
-       [E]
+        [A]
+       / | \
+     [B] [C] [D]   ← 并发执行
+       \ | /
+        [E]
 ```
 
-All parallel branches must complete before merging nodes execute.
+所有并行分支必须完成后才能执行合并节点。
 
-### 4.3 Cycle Detection
+### 4.3 环路检测
 
-- DAG validation runs at graph compilation time
-- Cycles raise `WORKFLOW_CYCLE_DETECTED (8004)` before execution
-- No runtime cycles are permitted
+- DAG 验证在图编译时运行
+- 检测到环路时在执行前抛出 `WORKFLOW_CYCLE_DETECTED (8004)`
+- 不允许运行时环路
 
 ---
 
-## 5. Workflow Registry
+## 5. Workflow 注册表
 
 ```python
 class WorkflowRegistry:
@@ -195,13 +195,13 @@ class WorkflowRegistry:
         """List all registered workflow names."""
 ```
 
-Workflows are registered at application startup from both `workflows/*.yaml` and programmatic registration.
+工作流在应用启动时从 `workflows/*.yaml` 和编程式注册中注册。
 
 ---
 
-## 6. /run Orchestration Flow
+## 6. /run 编排流程
 
-The `POST /api/v1/run` endpoint uses the workflow engine:
+`POST /api/v1/run` 端点使用工作流引擎：
 
 ```
 RunRequest
@@ -218,7 +218,7 @@ RunRequest
   → yield done
 ```
 
-### 6.1 Capabilities Resolution
+### 6.1 能力解析
 
 ```python
 def resolve_capabilities(step, agent) -> set[str]:
@@ -231,39 +231,39 @@ def resolve_capabilities(step, agent) -> set[str]:
     return tool_names
 ```
 
-### 6.2 SSE Events for /run
+### 6.2 /run 的 SSE 事件
 
-| Event | Description |
-|-------|-------------|
-| `start` | Stream begins |
-| `route` | Selected workflow (optional, can hide from client) |
-| `agent` | Agent step begins |
-| `tool` | Tool call result |
-| `citation` | RAG reference sources |
-| `chunk` | Streaming text |
-| `heartbeat` | Keep-alive (~15s) |
-| `done` | Stream complete |
-| `error` | Error with AI_xxxx code |
+| 事件 | 说明 |
+|------|------|
+| `start` | 流开始 |
+| `route` | 选中的工作流（可选，可对客户端隐藏） |
+| `agent` | Agent 步骤开始 |
+| `tool` | 工具调用结果 |
+| `citation` | RAG 引用来源 |
+| `chunk` | 流式文本 |
+| `heartbeat` | 保活（约 15 秒） |
+| `done` | 流完成 |
+| `error` | 错误，附带 AI_xxxx 错误码 |
 
-Note: `structured`, `progress` are business-specific and not included in the default template `/run`. `intent` and `usage` events are included per API_CONTRACT.md.
-
----
-
-## 7. Error Handling
-
-| Scenario | Error Code | Behavior |
-|----------|-----------|----------|
-| Node not found | `8001 WORKFLOW_NODE_NOT_FOUND` | Fail workflow |
-| Invalid edge | `8002 WORKFLOW_EDGE_INVALID` | Fail workflow |
-| Node execution error | `8003 WORKFLOW_EXECUTION_FAILED` | Record error, mark task failed |
-| Cycle detected | `8004 WORKFLOW_CYCLE_DETECTED` | Fail at compile time |
-| Invalid state transition | `8005 WORKFLOW_STATE_ERROR` | Fail workflow |
-| Workflow not found | `2101 WORKFLOW_NOT_FOUND` | Fall back to `default_qa` |
-| Skill not found | `7002 AGENT_TOOL_NOT_FOUND` | Fail step |
+注意：`structured`、`progress` 是业务特定的，不包含在默认模板 `/run` 中。`intent` 和 `usage` 事件按 API_CONTRACT.md 包含。
 
 ---
 
-## 8. Integration with Domain — [TBD: filled by F13]
+## 7. 错误处理
+
+| 场景 | 错误码 | 行为 |
+|------|--------|------|
+| 节点未找到 | `8001 WORKFLOW_NODE_NOT_FOUND` | 工作流失败 |
+| 无效边 | `8002 WORKFLOW_EDGE_INVALID` | 工作流失败 |
+| 节点执行错误 | `8003 WORKFLOW_EXECUTION_FAILED` | 记录错误，标记任务失败 |
+| 检测到环路 | `8004 WORKFLOW_CYCLE_DETECTED` | 编译时失败 |
+| 无效状态转换 | `8005 WORKFLOW_STATE_ERROR` | 工作流失败 |
+| 工作流未找到 | `2101 WORKFLOW_NOT_FOUND` | 回退到 `default_qa` |
+| 技能未找到 | `7002 AGENT_TOOL_NOT_FOUND` | 步骤失败 |
+
+---
+
+## 8. 与领域的集成 — [TBD: filled by F13]
 
 ```python
 # In domain/orchestration/service.py (F14+)
@@ -273,19 +273,19 @@ async def run_orchestration(request: RunRequest) -> AsyncGenerator[str, None]:
         yield event
 ```
 
-The workflow engine never contains business logic — it only executes graph nodes.
+工作流引擎不包含业务逻辑 — 它仅执行图节点。
 
 ---
 
-## 9. New Project Customization
+## 9. 新项目定制
 
-| What to customize | Where |
-|-------------------|-------|
-| Workflow definitions | `workflows/*.yaml` |
-| Agent prompts | `prompts/agents/*.md` |
-| Skill definitions | `skills/*.yaml` |
-| Skill prompts | `prompts/skills/*.md` |
-| Step-level tools | Add to `app/tools/` + register |
+| 定制内容 | 位置 |
+|----------|------|
+| 工作流定义 | `workflows/*.yaml` |
+| Agent 提示词 | `prompts/agents/*.md` |
+| Skill 定义 | `skills/*.yaml` |
+| Skill 提示词 | `prompts/skills/*.md` |
+| 步骤级工具 | 添加到 `app/tools/` 并注册 |
 
-**Template-maintained**: Engine code (`StateGraph`, `WorkflowRegistry`, `WorkflowEngine`)
-**Project-customized**: YAML definitions, agent prompts, tool implementations
+**模板维护**：引擎代码（`StateGraph`、`WorkflowRegistry`、`WorkflowEngine`）
+**项目定制**：YAML 定义、Agent 提示词、工具实现

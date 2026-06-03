@@ -42,6 +42,7 @@
 ### 1.2 必读 docs（DEPENDENCY_MAP 表 2 + 工单列表）
 
 - `docs/02-engineering/LLM_GATEWAY_SPEC.md`
+- `docs/01-architecture/ERROR_CODE.md`
 - `docs/00-meta/DEPENDENCY_MAP.md`（本工单 F04 行）
 - `ARCHITECTURE.md`（分层规则）
 

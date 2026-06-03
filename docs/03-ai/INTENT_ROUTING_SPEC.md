@@ -1,21 +1,21 @@
-# Intent Routing Specification
+# 意图路由规格
 
-## Overview
+## 概述
 
-The Intent Routing service (`app/domain/intent/`) classifies user input into one of several intent categories using a three-layer pipeline (keyword → similarity → LLM) and routes the request to the appropriate processing pipeline. It supports multi-intent detection with query reconstruction for subject omission resolution.
+意图路由服务（`app/domain/intent/`）通过三层流水线（关键词 → 相似度 → LLM）将用户输入分类到若干意图类别之一，并将请求路由到相应的处理流水线。支持多意图检测及主语省略补全的查询重构。
 
-## Intent Categories — [TBD: filled by F16]
+## 意图类别 — [TBD: filled by F16]
 
-| Intent | Description | Target Pipeline |
+| 意图 | 描述 | 目标流水线 |
 |--------|-------------|----------------|
-| `qa` | Knowledge Q&A requiring retrieval | Knowledge domain (RAG pipeline) |
-| `task` | Multi-step task requiring tools | Agent/Workflow pipeline |
-| `chat` | Free conversation, no retrieval | Chat domain |
-| `retrieve_only` | Pure retrieval, no generation | Knowledge domain (retrieval only) |
+| `qa` | 需要检索的知识问答 | 知识域（RAG 流水线） |
+| `task` | 需要工具的多步骤任务 | Agent/Workflow 流水线 |
+| `chat` | 自由对话，无需检索 | Chat 域 |
+| `retrieve_only` | 纯检索，无需生成 | 知识域（仅检索） |
 
-Default intent types are extensible by business via prompt configuration. The template provides these 4; business projects can add more through `candidates` parameter and prompt updates.
+默认意图类型可通过 prompt 配置由业务方扩展。模板提供上述 4 种；业务项目可通过 `candidates` 参数及 prompt 更新添加更多类型。
 
-## Architecture — [TBD: filled by F16]
+## 架构 — [TBD: filled by F16]
 
 ```
 User Input
@@ -33,13 +33,13 @@ Intent Result (primary intent + sub_intents)
 Router → Target Domain
 ```
 
-The intent service is intentionally simple — it classifies and returns the result. The actual routing decision is made by the caller (API layer or workflow).
+意图服务设计为简单分类并返回结果。实际路由决策由调用方（API 层或 workflow）做出。
 
-## Three-Layer Pipeline — [TBD: filled by F16]
+## 三层流水线 — [TBD: filled by F16]
 
-### L1: Keyword Matching
+### L1：关键词匹配
 
-Fastest layer with zero LLM cost. Matches user input against keyword rules defined in config.
+最快的层，LLM 成本为零。将用户输入与配置中定义的关键词规则进行匹配。
 
 ```python
 class KeywordMatcher:
@@ -52,9 +52,9 @@ class KeywordMatcher:
         """
 ```
 
-### L2: Similarity Matching
+### L2：相似度匹配
 
-Embedding-based matching. Compares query embedding against pre-computed intent representative embeddings.
+基于嵌入的匹配。将查询嵌入与预计算的意图代表嵌入进行比较。
 
 ```python
 class SimilarityMatcher:
@@ -67,9 +67,9 @@ class SimilarityMatcher:
         """
 ```
 
-### L3: LLM Classification
+### L3：LLM 分类
 
-Most accurate layer. Uses LLM to classify intent with structured JSON output.
+最准确的层。使用 LLM 通过结构化 JSON 输出对意图进行分类。
 
 ```python
 class LLMClassifier:
@@ -83,24 +83,24 @@ class LLMClassifier:
         """
 ```
 
-### Multi-Intent Detection — [TBD: filled by F16]
+### 多意图检测 — [TBD: filled by F16]
 
-When enabled, the LLM classification layer can detect multiple intents in a single query:
+启用后，LLM 分类层可在单次查询中检测多个意图：
 
 > "帮我创建一个知识库，顺便解释下 RAG 是什么"
-> → Primary: `task` ("帮我创建一个知识库")
-> → Sub: `qa` ("解释下 RAG 是什么")
+> → 主意图：`task`（"帮我创建一个知识库"）
+> → 子意图：`qa`（"解释下 RAG 是什么"）
 
-Each sub-intent has its query reconstructed to resolve subject omission:
+每个子意图都会重构查询，以解决主语省略问题：
 
-| Field | Description |
+| 字段 | 描述 |
 |-------|-------------|
-| `query` | Reconstructed full query (resolves subject omission) |
-| `original_query` | Original text fragment from user input |
+| `query` | 重构后的完整查询（解决主语省略） |
+| `original_query` | 来自用户输入的原始文本片段 |
 
-## Prompt Template — [TBD: filled by F16]
+## Prompt 模板 — [TBD: filled by F16]
 
-Template loaded from `prompts/intent/classify.md`:
+模板从 `prompts/intent/classify.md` 加载：
 
 ```markdown
 Classify the following user input into one or more categories.
@@ -123,7 +123,7 @@ Respond in JSON format:
 {{"primary_intent": "<category>", "confidence": <0.0-1.0>, "reasoning": "<brief explanation>", "sub_intents": [{{"intent": "<category>", "query": "<reconstructed full question>", "original_query": "<original fragment>", "confidence": <0.0-1.0>}}]}}
 ```
 
-## Intent Result — [TBD: filled by F16]
+## 意图结果 — [TBD: filled by F16]
 
 ```python
 class IntentResult:
@@ -148,16 +148,16 @@ class RoutingInfo:
     model: str                     # Recommended model
 ```
 
-## Fallback Strategy — [TBD: filled by F16]
+## 降级策略 — [TBD: filled by F16]
 
-| Scenario | Fallback Intent |
+| 场景 | 降级意图 |
 |----------|----------------|
-| All three layers fail | `chat` (safest default) |
-| Confidence < threshold (configurable, default 0.5) | `chat` |
-| Unknown intent category | `chat` |
-| Input too short (< 3 characters) | `chat` |
+| 三层均失败 | `chat`（最安全的默认值） |
+| 置信度 < 阈值（可配置，默认 0.5） | `chat` |
+| 未知意图类别 | `chat` |
+| 输入过短（< 3 个字符） | `chat` |
 
-## Configuration — [TBD: filled by F16]
+## 配置 — [TBD: filled by F16]
 
 ```yaml
 # configs/default.yaml
@@ -190,9 +190,9 @@ intent:
   timeout: 5.0
 ```
 
-## Integration with Workflow — [TBD: filled by F16]
+## 与 Workflow 的集成 — [TBD: filled by F16]
 
-Intent routing can be used as a workflow node:
+意图路由可作为 workflow 节点使用：
 
 ```python
 # In a StateGraph workflow
@@ -201,13 +201,13 @@ graph.add_conditional_edges("classify_intent", route_by_intent)
 # route_by_intent returns: "qa_node", "task_node", "chat_node", "retrieve_node", etc.
 ```
 
-## API Endpoint — [TBD: filled by F16]
+## API 端点 — [TBD: filled by F16]
 
-| Method | Path | Description |
+| 方法 | 路径 | 描述 |
 |--------|------|-------------|
-| POST | /api/v1/intent | Classify user intent (three-layer + multi-intent) |
+| POST | /api/v1/intent | 分类用户意图（三层 + 多意图） |
 
-### Request
+### 请求
 
 ```json
 {
@@ -223,7 +223,7 @@ graph.add_conditional_edges("classify_intent", route_by_intent)
 }
 ```
 
-### Response
+### 响应
 
 ```json
 {
@@ -249,13 +249,13 @@ graph.add_conditional_edges("classify_intent", route_by_intent)
 }
 ```
 
-## Error Codes — [TBD: filled by F16]
+## 错误码 — [TBD: filled by F16]
 
-| Code | Name | Description |
+| 错误码 | 名称 | 描述 |
 |------|------|-------------|
-| 2001 | INTENT_CLASSIFY_FAILED | LLM classification call failed |
-| 2002 | INTENT_UNKNOWN | Could not determine intent |
-| 2003 | INTENT_TIMEOUT | Classification timed out |
-| 2004 | INTENT_INVALID_INPUT | Input too short or malformed |
+| 2001 | INTENT_CLASSIFY_FAILED | LLM 分类调用失败 |
+| 2002 | INTENT_UNKNOWN | 无法确定意图 |
+| 2003 | INTENT_TIMEOUT | 分类超时 |
+| 2004 | INTENT_INVALID_INPUT | 输入过短或格式异常 |
 
 [TBD: filled by work order F16]

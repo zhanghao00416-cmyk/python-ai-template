@@ -9,7 +9,7 @@
       "behavior": "FastAPI 启动，/health 返回 200，DI 容器可用，YAML 配置加载成功",
       "verification": "curl http://localhost:6006/api/v1/health && pytest tests/test_01_skeleton.py",
       "state": "passing",
-      "evidence": "12/12 tests pass; health endpoint returns 200; DI container register/resolve/override/reset/cleanup works; YAML config loads with correct defaults; architecture check passed"
+      "evidence": "13/13 tests pass; health endpoint returns 200; DI container register/resolve/override/reset/cleanup works; YAML config loads with correct defaults (env coercion); architecture check passed"
     },
     {
       "id": "F02",

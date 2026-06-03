@@ -10,7 +10,7 @@
 | **build_mode** | `greenfield` |
 | **last_updated** | 2026-06-02 |
 | **last_ticket** | Harness 优化第5轮（DEPENDENCY_MAP 表 3 TestNewHarness 参考索引） |
-| **last_verified** | 表 3 + AGENTS/工单 §1.4；generate_orders --orders-only；pytest 12/12 |
+| **last_verified** | Harness 文档审计；config 类型强制；pytest 13/13；init.ps1 6/6 |
 | **task_mode** | `linear` |
 
 ## 阶段说明
@@ -117,4 +117,4 @@
   - ARCHITECTURE.md 增加启动编排 / 熔断器降级 / 按任务分流 / SSE 服务 / JSON 修复 / Citation / Image Processor / 变更规则
   - 新增 progress.md 进度文件
   - configs 新增 circuit_breaker 段
-  - F01 已 passing（12/12 测试）
+  - F01 已 passing（13/13 测试）

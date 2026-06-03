@@ -1,34 +1,34 @@
-# Chat Workflow Specification
+# 对话工作流规范
 
-## Overview
+## 概述
 
-The Chat workflow (`app/domain/chat/`) manages conversation sessions, message persistence, context window assembly, LLM interaction, and SSE streaming responses. It is the core user-facing interaction pattern.
+对话工作流（`app/domain/chat/`）管理会话、消息持久化、上下文窗口组装、LLM 交互以及 SSE 流式响应。它是核心的用户面向交互模式。
 
-## Chat Request Flow — [TBD: filled by F14]
+## 对话请求流程 — [TBD: filled by F14]
 
 ```
 POST /api/v1/chat (SSE)
     ↓
-API Layer (api/chat.py)
+API 层 (api/chat.py)
     ↓
 ChatService (domain/chat/service.py)
     ↓
 ┌──────────────────────────────────┐
-│ 1. Resolve or create session      │
-│ 2. Persist user message           │
-│ 3. Build context window           │
-│ 4. Call LLM Gateway (stream)     │
-│ 5. Stream SSE events             │
-│ 6. Persist assistant message      │
-│ 7. Update session metadata        │
+│ 1. 解析或创建会话                  │
+│ 2. 持久化用户消息                  │
+│ 3. 构建上下文窗口                  │
+│ 4. 调用 LLM 网关（流式）           │
+│ 5. 流式推送 SSE 事件               │
+│ 6. 持久化助手消息                  │
+│ 7. 更新会话元数据                  │
 └──────────────────────────────────┘
     ↓
-SSE Event Stream to Client
+SSE 事件流推送至客户端
 ```
 
-## SSE Event Protocol — [TBD: filled by F06, F14]
+## SSE 事件协议 — [TBD: filled by F06, F14]
 
-The chat endpoint returns an SSE stream with the following events:
+对话端点返回一个 SSE 流，包含以下事件：
 
 ```
 event: start
@@ -47,95 +47,95 @@ event: done
 data: {"message_id": "uuid", "reason": "complete", "input_tokens": 50, "output_tokens": 120}
 
 event: error
-data: {"code": 1001, "message": "Unauthorized"}
+data: {"code": "AI_1001", "message": "Unauthorized"}
 ```
 
-### Event Lifecycle
+### 事件生命周期
 
-1. `start` — Sent immediately, includes session and message IDs
-2. `chunk` — Sent for each LLM streaming token group
-3. `citation` — Sent if RAG sources are available (optional)
-4. `heartbeat` — Sent every N seconds to prevent timeout (configurable, default 15s)
-5. `done` — Sent when LLM generation is complete, includes token stats
-6. `error` — Sent if any error occurs, then stream closes
+1. `start` — 立即发送，包含会话 ID 和消息 ID
+2. `chunk` — 每个 LLM 流式 token 组发送一次
+3. `citation` — 当 RAG 来源可用时发送（可选）
+4. `heartbeat` — 每 N 秒发送一次以防止超时（可配置，默认 15 秒）
+5. `done` — LLM 生成完成时发送，包含 token 统计信息
+6. `error` — 发生任何错误时发送，随后关闭流
 
-## Session Lifecycle — [TBD: filled by F09, F14]
+## 会话生命周期 — [TBD: filled by F09, F14]
 
-Sessions are auto-created on first chat request. Caller generates `session_id` (UUID); if it doesn't exist, a new session is created automatically.
+会话在首次对话请求时自动创建。调用方生成 `session_id`（UUID）；如果该 ID 不存在，则自动创建新会话。
 
-### Auto-Create Session
+### 自动创建会话
 
-When a chat request arrives with a `session_id` that doesn't exist:
+当对话请求携带的 `session_id` 不存在时：
 
-1. Create new session with `user_id`, `session_id`, `title` (optional), `model_config` (optional)
-2. First-time fields only take effect on creation
-3. Subsequent requests with the same `session_id` reuse the session
+1. 使用 `user_id`、`session_id`、`title`（可选）、`model_config`（可选）创建新会话
+2. 首次设置的字段仅在创建时生效
+3. 后续使用相同 `session_id` 的请求将复用该会话
 
-### Get Session
+### 获取会话
 
 ```python
 GET /api/v1/chat/sessions/{session_id}
 → { "session_id": "uuid", "title": "...", "message_count": 5, "created_at": "...", "updated_at": "..." }
 ```
 
-### Delete Session
+### 删除会话
 
 ```python
 DELETE /api/v1/chat/sessions/{session_id}
 → { "code": 0, "message": "ok" }
 ```
 
-## Message Persistence — [TBD: filled by F09, F14]
+## 消息持久化 — [TBD: filled by F09, F14]
 
-### Add User Message
+### 添加用户消息
 
-When a chat request arrives:
+当对话请求到达时：
 
-1. If `session_id` provided: validate session exists
-2. If no `session_id`: create new session
-3. Persist user message via `ContextManager.add_message()`
-4. Count tokens and store in `token_count` field
+1. 如果提供了 `session_id`：验证会话是否存在
+2. 如果没有 `session_id`：创建新会话
+3. 通过 `ContextManager.add_message()` 持久化用户消息
+4. 计算 token 数并存储在 `token_count` 字段中
 
-### Add Assistant Message
+### 添加助手消息
 
-After LLM generation completes:
+LLM 生成完成后：
 
-1. Persist full assistant response via `ContextManager.add_message()`
-2. Store `input_tokens` and `output_tokens`
-3. Store `citations` if RAG was used
-4. Update `session.updated_at`
+1. 通过 `ContextManager.add_message()` 持久化完整的助手响应
+2. 存储 `input_tokens` 和 `output_tokens`
+3. 如果使用了 RAG，则存储 `citations`
+4. 更新 `session.updated_at`
 
-## Context Window Assembly — [TBD: filled by F09, F14]
+## 上下文窗口组装 — [TBD: filled by F09, F14]
 
-Before calling the LLM, the chat service assembles the context:
+调用 LLM 之前，对话服务组装上下文：
 
-1. Load system prompt from `prompts/chat/system.md`
-2. Retrieve conversation history via `ContextManager.get_context_window()`
-3. Apply truncation strategy (default: `recent_priority`)
-4. Merge: system prompt + truncated history + user message
-5. Ensure total tokens ≤ model context limit
+1. 从 `prompts/chat/system.md` 加载系统提示词
+2. 通过 `ContextManager.get_context_window()` 检索对话历史
+3. 应用截断策略（默认：`recent_priority`）
+4. 合并：系统提示词 + 截断后的历史 + 用户消息
+5. 确保总 token 数 ≤ 模型上下文限制
 
-### Context Window Parameters — [TBD: filled by F14]
+### 上下文窗口参数 — [TBD: filled by F14]
 
 ```python
 class ChatContextConfig:
-    max_context_tokens: int = 4096    # Total context window
-    system_prompt_tokens: int = 500   # Budget for system prompt
+    max_context_tokens: int = 4096    # 总上下文窗口
+    system_prompt_tokens: int = 500   # 系统提示词预算
     truncation_strategy: str = "recent_priority"
     include_citations: bool = True
 ```
 
-## LLM Call — [TBD: filled by F04, F14]
+## LLM 调用 — [TBD: filled by F04, F14]
 
-- Uses `LLMGateway.generate_stream()` for SSE responses
-- Task type: `"chat"`
-- Model: from session config or default
-- Concurrency: governed by LLM semaphore
-- Timeout: configurable per chat request
+- 使用 `LLMGateway.generate_stream()` 获取 SSE 响应
+- 任务类型：`"chat"`
+- 模型：来自会话配置或默认配置
+- 并发：受 LLM 信号量管控
+- 超时：可按对话请求配置
 
-## Streaming Service — [TBD: filled by F06, F14]
+## 流式服务 — [TBD: filled by F06, F14]
 
-The SSE stream is managed by `services/sse_stream/`:
+SSE 流由 `services/sse_stream/` 管理：
 
 ```python
 class SSEStreamService:
@@ -145,38 +145,38 @@ class SSEStreamService:
         llm_stream: AsyncIterator[LLMChunk]
     ) -> EventSourceResponse:
         """
-        1. Send 'start' event
-        2. Iterate LLM stream, send 'chunk' events
-        3. Send 'citation' events if available
-        4. Send 'heartbeat' events periodically
-        5. Send 'done' event with token stats
-        6. Handle disconnect detection
-        7. On error: send 'error' event and close
+        1. 发送 'start' 事件
+        2. 迭代 LLM 流，发送 'chunk' 事件
+        3. 如有可用来源，发送 'citation' 事件
+        4. 定期发送 'heartbeat' 事件
+        5. 发送包含 token 统计的 'done' 事件
+        6. 处理断开检测
+        7. 出错时：发送 'error' 事件并关闭
         """
 ```
 
-### Disconnect Detection — [TBD: filled by F06]
+### 断开检测 — [TBD: filled by F06]
 
-- Client disconnect is detected via asyncio event
-- On disconnect: cancel LLM stream, send log event
-- No orphan LLM calls allowed
+- 通过 asyncio 事件检测客户端断开
+- 断开时：取消 LLM 流，发送日志事件
+- 不允许遗留孤立的 LLM 调用
 
-## API Endpoints — [TBD: filled by F14]
+## API 端点 — [TBD: filled by F14]
 
-| Method | Path | Description | Response |
-|--------|------|-------------|----------|
-| POST | /api/v1/chat | Chat completion (auto-create session, SSE or sync) | EventSourceResponse / JSON |
-| GET | /api/v1/chat/sessions/{id} | Get session | JSON |
-| GET | /api/v1/chat/sessions/{id}/messages | List messages | JSON |
-| DELETE | /api/v1/chat/sessions/{id} | Delete session (soft delete, cascade) | JSON |
+| 方法 | 路径 | 描述 | 响应 |
+|------|------|------|------|
+| POST | /api/v1/chat | 对话补全（自动创建会话，SSE 或同步） | EventSourceResponse / JSON |
+| GET | /api/v1/chat/sessions/{id} | 获取会话 | JSON |
+| GET | /api/v1/chat/sessions/{id}/messages | 列出消息 | JSON |
+| DELETE | /api/v1/chat/sessions/{id} | 删除会话（软删除，级联） | JSON |
 
-## Error Codes — [TBD: filled by F14]
+## 错误码 — [TBD: filled by F14]
 
-Uses system error codes from `docs/01-architecture/ERROR_CODE.md`:
+使用 `docs/01-architecture/ERROR_CODE.md` 中的系统错误码：
 
-- `0004 TIMEOUT_ERROR` — LLM timeout
-- `0003 SERVICE_UNAVAILABLE` — LLM unavailable
-- `0005 VALIDATION_ERROR` — Invalid request
-- `1001 AUTH_INVALID_KEY` — Missing/invalid API key
+- `0004 TIMEOUT_ERROR` — LLM 超时
+- `0003 SERVICE_UNAVAILABLE` — LLM 不可用
+- `0005 VALIDATION_ERROR` — 无效请求
+- `1001 AUTH_INVALID_KEY` — 缺少/无效的 API 密钥
 
 [TBD: filled by work orders F04, F06, F09, F14]

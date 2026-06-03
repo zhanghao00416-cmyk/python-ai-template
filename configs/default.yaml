@@ -72,44 +72,49 @@ qdrant:
 
 concurrency:
   llm_semaphore_size: 20
-  vision_semaphore_size: 10
-  video_semaphore_size: 6
+  multimodal_semaphore_size: 10
   embedding_semaphore_size: 20
   semaphore_acquire_timeout: 120
 
 knowledge:
   collections:
-    - name: "ai_knowledge"
+    - name: "general"
       description: "通用知识库"
       vector_dim: 1024
       distance: "Cosine"
       sparse_vector: true
-      types:
-        - name: "hazard"
-          description: "安全隐患"
-        - name: "general"
-          description: "通用知识"
-        - name: "policy"
-          description: "政策法规"
-      default_type: "general"
-      chunk_size: 500
-      chunk_overlap: 50
+      payload_indexes:
+        - field: "doc_type"
+          type: "keyword"
+        - field: "source"
+          type: "keyword"
+        - field: "tag"
+          type: "keyword"
+        - field: "uploader"
+          type: "keyword"
+        - field: "doc_id"
+          type: "keyword"
+      default_chunk_size: 500
+      default_chunk_overlap: 50
 
-    - name: "product_manual"
-      description: "产品手册"
+    - name: "safety"
+      description: "安全隐患文档库"
       vector_dim: 1024
       distance: "Cosine"
       sparse_vector: true
-      types:
-        - name: "specification"
-          description: "产品规格"
-        - name: "faq"
-          description: "常见问题"
-        - name: "troubleshooting"
-          description: "故障排除"
-      default_type: "faq"
-      chunk_size: 800
-      chunk_overlap: 100
+      payload_indexes:
+        - field: "doc_type"
+          type: "keyword"
+        - field: "source"
+          type: "keyword"
+        - field: "tag"
+          type: "keyword"
+        - field: "uploader"
+          type: "keyword"
+        - field: "doc_id"
+          type: "keyword"
+      default_chunk_size: 500
+      default_chunk_overlap: 50
 
   retrieval:
     default_top_k: 3

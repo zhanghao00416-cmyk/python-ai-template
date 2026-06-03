@@ -1,17 +1,17 @@
-# Deployment Guide
+# 部署指南
 
-## Overview
+## 概述
 
-This document provides the framework for deploying the Python AI Template. It covers Docker, Docker Compose, configuration management, and production readiness checks.
+本文档提供了 Python AI Template 的部署框架。涵盖 Docker、Docker Compose、配置管理和生产就绪检查。
 
-## Prerequisites — [TBD: filled by F21]
+## 前置条件 — [TBD: filled by F21]
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| Python | 3.11+ | Runtime |
-| PostgreSQL | 15+ | Primary database |
-| Redis | 7+ | Caching, rate limiting, session state |
-| Qdrant | 1.7+ | Vector store |
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Python | 3.11+ | 运行时 |
+| PostgreSQL | 15+ | 主数据库 |
+| Redis | 7+ | 缓存、限流、会话状态 |
+| Qdrant | 1.7+ | 向量存储 |
 
 ## Docker — [TBD: filled by F21]
 
@@ -19,16 +19,16 @@ This document provides the framework for deploying the Python AI Template. It co
 
 ```dockerfile
 FROM python:3.11-slim
-# Multi-stage build: builder + runtime
-# Builder: install dependencies
-# Runtime: copy app, run with uvicorn
+# 多阶段构建：builder + runtime
+# Builder：安装依赖
+# Runtime：复制应用，使用 uvicorn 运行
 ```
 
-Key requirements:
-- Multi-stage build for minimal image size
-- Non-root user for runtime
-- Health check endpoint
-- Environment variable injection
+关键要求：
+- 多阶段构建以最小化镜像体积
+- 运行时使用非 root 用户
+- 健康检查端点
+- 环境变量注入
 
 ### Docker Compose — [TBD: filled by F21]
 
@@ -56,93 +56,93 @@ services:
     volumes: [qdrantdata:/qdrant/storage]
 ```
 
-## Configuration Management — [filled by F01]
+## 配置管理 — [filled by F01]
 
-### Priority (High → Low)
+### 优先级（高 → 低）
 
-1. `/run/secrets/<name>` files — see `secrets/README.md` (`qwen_api_key`, `api_key`, `jwt_secret`)
-2. Environment variables / repo-root `.env` — `docker-compose` `env_file: .env`
+1. `/run/secrets/<name>` 文件 — 参见 `secrets/README.md`（`qwen_api_key`、`api_key`、`jwt_secret`）
+2. 环境变量 / 仓库根目录 `.env` — `docker-compose` `env_file: .env`
 3. `configs/override.yaml`
 4. `configs/default.yaml`
 
-Copy `.env.example` → `.env` at repo root. Legacy TestNewHarness keys such as `TEXT_MODEL__QWEN_API_KEY` are supported.
+将 `.env.example` 复制为仓库根目录的 `.env`。支持旧版 TestNewHarness 密钥，如 `TEXT_MODEL__QWEN_API_KEY`。
 
-### Required Environment Variables — [TBD: filled by F21]
+### 必需环境变量 — [TBD: filled by F21]
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://user:pass@localhost:5432/db` |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
-| `QDRANT_URL` | Qdrant connection string | `http://localhost:6333` |
-| `QWEN_API_KEY` | Qwen Cloud API key | `sk-...` |
-| `LLM_DEFAULT_CHANNEL` | Default LLM channel | `qwen_cloud` |
-| `AUTH_ENABLED` | Enable API key auth | `true` |
-| `API_KEYS` | Comma-separated API keys | `key1,key2` |
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `DATABASE_URL` | PostgreSQL 连接字符串 | `postgresql+asyncpg://user:pass@localhost:5432/db` |
+| `REDIS_URL` | Redis 连接字符串 | `redis://localhost:6379/0` |
+| `QDRANT_URL` | Qdrant 连接字符串 | `http://localhost:6333` |
+| `QWEN_API_KEY` | Qwen 云端 API 密钥 | `sk-...` |
+| `LLM_DEFAULT_CHANNEL` | 默认 LLM 通道 | `qwen_cloud` |
+| `AUTH_ENABLED` | 启用 API 密钥认证 | `true` |
+| `API_KEYS` | 逗号分隔的 API 密钥 | `key1,key2` |
 
-### Secrets
+### 密钥管理
 
-- Local: `secrets/` → mounted read-only to `/run/secrets` in compose
-- `.env` is tracked in this repo; `secrets/*` stays ignored (except `secrets/README.md`)
-- See `.env.example` for variable names
+- 本地：`secrets/` → 在 compose 中以只读方式挂载到 `/run/secrets`
+- `.env` 在本仓库中被跟踪；`secrets/*` 被忽略（`secrets/README.md` 除外）
+- 变量名参见 `.env.example`
 
-## Startup Procedure — [TBD: filled by F21]
+## 启动流程 — [TBD: filled by F21]
 
-### Application Startup Sequence
+### 应用启动序列
 
-1. Load configuration (YAML → `.env` → `/run/secrets`; see `app/core/config.py`)
-2. Initialize DI container
-3. Initialize database (run migrations if configured)
-4. Initialize Redis connection
-5. Initialize Qdrant client and create missing collections
-6. Load prompt templates
-7. Register API routes
-8. Start uvicorn server
+1. 加载配置（YAML → `.env` → `/run/secrets`；参见 `app/core/config.py`）
+2. 初始化 DI 容器
+3. 初始化数据库（如已配置则运行迁移）
+4. 初始化 Redis 连接
+5. 初始化 Qdrant 客户端并创建缺失的集合
+6. 加载 Prompt 模板
+7. 注册 API 路由
+8. 启动 uvicorn 服务器
 
-### Health Check — [TBD: filled by F01]
+### 健康检查 — [TBD: filled by F01]
 
 ```
 GET /api/v1/health
 → { "status": "ok", "version": "...", "uptime": 123.4 }
 ```
 
-Includes dependency health:
-- PostgreSQL: ping
-- Redis: ping
-- Qdrant: health check
-- LLM: warm-up call (optional, config-driven)
+包含依赖健康状态：
+- PostgreSQL：ping
+- Redis：ping
+- Qdrant：健康检查
+- LLM：预热调用（可选，由配置驱动）
 
-## Production Readiness Checklist — [TBD: filled by F21]
+## 生产就绪检查清单 — [TBD: filled by F21]
 
-- [ ] All feature_list.json items are `passing`
-- [ ] Architecture check passes (`scripts/check-architecture.sh`)
-- [ ] All tests pass (`pytest`)
-- [ ] Docker image builds successfully
-- [ ] `docker-compose up` starts all services
-- [ ] Health endpoint returns 200
-- [ ] API authentication works (or intentionally disabled for dev)
-- [ ] Rate limiting is configured
-- [ ] CORS origins are restricted (not `*`)
-- [ ] Logging outputs structured JSON
-- [ ] Secrets are not in code or config files
-- [ ] Database migrations are idempotent
-- [ ] Qdrant collections are auto-created on startup
-- [ ] SSE streaming works end-to-end
+- [ ] `feature_list.json` 所有项均为 `passing`
+- [ ] 架构检查通过（`scripts/check-architecture.sh`）
+- [ ] 所有测试通过（`pytest`）
+- [ ] Docker 镜像构建成功
+- [ ] `docker-compose up` 启动所有服务
+- [ ] 健康检查端点返回 200
+- [ ] API 认证正常工作（或开发环境有意禁用）
+- [ ] 限流已配置
+- [ ] CORS 来源已限制（非 `*`）
+- [ ] 日志输出结构化 JSON
+- [ ] 密钥未出现在代码或配置文件中
+- [ ] 数据库迁移具有幂等性
+- [ ] Qdrant 集合在启动时自动创建
+- [ ] SSE 流端到端正常工作
 
-## Monitoring — [TBD: filled by F18]
+## 监控 — [TBD: filled by F18]
 
-- Prometheus metrics at `/metrics`
-- Structured JSON logging (structlog)
-- Trace ID propagation through all requests
-- Token usage tracking per model/task
+- Prometheus 指标位于 `/metrics`
+- 结构化 JSON 日志（structlog）
+- Trace ID 在所有请求中传播
+- 按模型/任务的 Token 使用量追踪
 
-## Scaling Considerations — [TBD: filled by F21]
+## 扩展考量 — [TBD: filled by F21]
 
-| Concern | Strategy |
-|---------|----------|
-| LLM concurrency | Semaphore-limited (configurable) |
-| DB connections | AsyncEngine pool (configurable size) |
-| Redis connections | Connection pool |
-| Qdrant | Horizontal scaling via Qdrant cluster |
-| App instances | Horizontal scaling behind load balancer |
+| 关注点 | 策略 |
+|--------|------|
+| LLM 并发 | 信号量限制（可配置） |
+| 数据库连接 | AsyncEngine 连接池（可配置大小） |
+| Redis 连接 | 连接池 |
+| Qdrant | 通过 Qdrant 集群水平扩展 |
+| 应用实例 | 负载均衡后水平扩展 |
 
 [TBD: filled by work orders F01, F18, F21]

@@ -42,6 +42,7 @@
 ### 1.2 必读 docs（DEPENDENCY_MAP 表 2 + 工单列表）
 
 - `docs/03-ai/INTENT_ROUTING_SPEC.md`
+- `docs/01-architecture/API_CONTRACT.md`
 - `docs/00-meta/DEPENDENCY_MAP.md`（本工单 F16 行）
 - `ARCHITECTURE.md`（分层规则）
 

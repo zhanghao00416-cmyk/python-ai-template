@@ -9,10 +9,10 @@
   - 架构文档 25 个 `docs/**/*.md` + `ARCHITECTURE.md`（含 SSE / CIRCUIT / BOOTSTRAP / WORKFLOW / TOOLS_MCP 等）
   - 工单系统 23 条（F15→F15a/b/c）+ 模板 + 生成脚本
   - configs（default.yaml + models.yaml + agents.yaml）
-  - **F01 已 passing**：12/12 测试通过，health endpoint 200，DI 容器可用，YAML 配置加载正常
+  - **F01 已 passing**：13/13 测试通过，health endpoint 200，DI 容器可用，YAML 配置加载正常
   - skills/ + workflows/ + prompts/agents/ + prompts/skills/ 声明式 YAML 示例
 - **本轮跑过的验证**：
-  - `pytest tests/test_01_skeleton.py` — 12/12 passed
+  - `pytest tests/test_01_skeleton.py` — 13/13 passed
   - `bash scripts/check-architecture.sh` — all checks passed
   - Health endpoint `GET /api/v1/health` — 200 OK
 
@@ -67,7 +67,7 @@
   - `app/main.py`：FastAPI app 入口
   - `app/api/v1/health.py`：健康检查路由
   - `app/api/deps.py`：FastAPI Depends 桥接
-  - `tests/test_01_skeleton.py`：12 项测试覆盖全部 core 模块
+  - `tests/test_01_skeleton.py`：13 项测试覆盖全部 core 模块
 - **前轮设计文档更新**：
   - WORKFLOW_SPEC.md、API_CONTRACT.md（POST /run）、skills/workflows YAML 示例
   - progress.md build_mode 字段
@@ -108,6 +108,8 @@
 
 ## 命令速查
 
+人类上手见 **`使用手册.md`**；仓库入口 **`README.md`**。
+
 ```bash
 cd /path/to/python-ai-template
 bash init.sh          # Git Bash / WSL / Linux
@@ -122,5 +124,5 @@ cd C:\path\to\python-ai-template
 
 | 工单 | 阶段 | 备注 |
 |------|------|------|
-| F01 项目骨架 | **passing** | 12/12 测试通过 |
+| F01 项目骨架 | **passing** | 13/13 测试通过 |
 | F02 数据库模型+Redis | **in_progress** | 下一 session 从阶段1开始 |

@@ -1,17 +1,17 @@
-# Context Management Specification
+# 上下文管理规范
 
-## Overview
+## 概述
 
-The Context Manager (`app/services/context/`) handles session lifecycle, message persistence, and context window truncation. It ensures that LLM calls receive correctly sized context within token limits while preserving conversation continuity.
+上下文管理器（`app/services/context/`）负责会话生命周期、消息持久化和上下文窗口截断。它确保 LLM 调用在 token 限制内接收到正确大小的上下文，同时保持对话连续性。
 
-## Session Management — [TBD: filled by F09]
+## 会话管理 — [TBD: filled by F09]
 
-### Session Lifecycle
+### 会话生命周期
 
 ```
 Create → Active → (Idle timeout) → Expired
-              ↓
-           Delete
+               ↓
+            Delete
 ```
 
 ```python
@@ -32,22 +32,22 @@ class ContextManager:
         """Mark session as expired (idle timeout)."""
 ```
 
-### Session Model
+### 会话模型
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | UUID | Session identifier |
-| user_id | str | Owner |
-| title | str | Auto-generated or user-set |
-| intent_type | str | Classified intent |
-| model_config | dict | Model settings for this session |
-| created_at | datetime | Creation time |
-| updated_at | datetime | Last activity time |
-| metadata | dict | Extensible metadata |
+| 字段 | 类型 | 描述 |
+|-------|------|------|
+| id | UUID | 会话标识符 |
+| user_id | str | 所有者 |
+| title | str | 自动生成或用户设置 |
+| intent_type | str | 分类意图 |
+| model_config | dict | 此会话的模型设置 |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 最后活动时间 |
+| metadata | dict | 可扩展元数据 |
 
-## Message Management — [TBD: filled by F09]
+## 消息管理 — [TBD: filled by F09]
 
-### Message Lifecycle
+### 消息生命周期
 
 ```python
 class ContextManager:
@@ -61,32 +61,32 @@ class ContextManager:
         """Update message content (for streaming finalization)."""
 ```
 
-### Message Model
+### 消息模型
 
-| Field | Type | Description |
-|-------|------|-------------|
-| id | UUID | Message identifier |
-| session_id | UUID | Parent session |
+| 字段 | 类型 | 描述 |
+|-------|------|------|
+| id | UUID | 消息标识符 |
+| session_id | UUID | 所属会话 |
 | role | str | user / assistant / system / tool |
-| content | str | Message text |
-| token_count | int | Token count (for window management) |
-| model_name | str | LLM model used |
-| citations | list | RAG citation references |
-| tool_calls | list | Agent tool calls |
-| tool_results | list | Agent tool results |
-| created_at | datetime | Message timestamp |
+| content | str | 消息文本 |
+| token_count | int | Token 计数（用于窗口管理） |
+| model_name | str | 使用的 LLM 模型 |
+| citations | list | RAG 引用参考 |
+| tool_calls | list | Agent 工具调用 |
+| tool_results | list | Agent 工具结果 |
+| created_at | datetime | 消息时间戳 |
 
-## Context Window Truncation — [TBD: filled by F09]
+## 上下文窗口截断 — [TBD: filled by F09]
 
-### Strategy
+### 策略
 
-When conversation history exceeds the model's context window, the Context Manager must truncate while preserving:
+当对话历史超过模型的上下文窗口时，上下文管理器必须进行截断，同时保留：
 
-1. **System prompt** — always included
-2. **Most recent messages** — prioritized
-3. **Summary of earlier context** — generated via LLM (optional)
+1. **系统提示词** — 始终包含
+2. **最近的消息** — 优先保留
+3. **较早上下文的摘要** — 通过 LLM 生成（可选）
 
-### Truncation Algorithm — [TBD: filled by F09]
+### 截断算法 — [TBD: filled by F09]
 
 ```python
 async def get_context_window(
@@ -105,16 +105,16 @@ async def get_context_window(
     """
 ```
 
-### Token Counting — [TBD: filled by F09]
+### Token 计数 — [TBD: filled by F09]
 
 ```python
 def count_tokens(text: str, model: str) -> int:
     """Count tokens using model-appropriate tokenizer."""
 ```
 
-Default: use `tiktoken` for OpenAI-compatible models, approximation for others.
+默认：OpenAI 兼容模型使用 `tiktoken`，其他模型使用近似值。
 
-### Context Window Structure — [TBD: filled by F09]
+### 上下文窗口结构 — [TBD: filled by F09]
 
 ```python
 class ContextWindow:
@@ -126,26 +126,26 @@ class ContextWindow:
     summary: str | None            # Summary of dropped messages (if strategy=summary)
 ```
 
-## Redis Caching — [TBD: filled by F09]
+## Redis 缓存 — [TBD: filled by F09]
 
-- Active session context cached in Redis for fast retrieval
-- Cache key: `session_ctx:{session_id}`
-- TTL: configurable per session (default: 1 hour)
-- Cache invalidated on message append
-- On cache miss, rebuild from PostgreSQL
+- 活跃会话上下文缓存在 Redis 中以实现快速检索
+- 缓存键：`session_ctx:{session_id}`
+- TTL：按会话可配置（默认：1 小时）
+- 消息追加时使缓存失效
+- 缓存未命中时，从 PostgreSQL 重建
 
-## Concurrency — [TBD: filled by F09]
+## 并发 — [TBD: filled by F09]
 
-- Message append is append-only (no concurrent write conflicts)
-- Context window reads are read-only (safe concurrent reads)
-- Token counting is CPU-bound and runs in thread pool
+- 消息追加为仅追加操作（无并发写入冲突）
+- 上下文窗口读取为只读操作（安全的并发读取）
+- Token 计数为 CPU 密集型，在线程池中运行
 
-## Error Handling — [TBD: filled by F09]
+## 错误处理 — [TBD: filled by F09]
 
-| Scenario | Error Code | Behavior |
+| 场景 | 错误码 | 行为 |
 |----------|-----------|----------|
-| Session not found | `0005 VALIDATION_ERROR` | Return 404 |
-| Token limit exceeded despite truncation | `0004 TIMEOUT_ERROR` | Retry with smaller window |
-| Redis unavailable | `0003 SERVICE_UNAVAILABLE` | Fall back to DB-only |
+| 会话未找到 | `0005 VALIDATION_ERROR` | 返回 404 |
+| 截断后仍超出 token 限制 | `0004 TIMEOUT_ERROR` | 以更小窗口重试 |
+| Redis 不可用 | `0003 SERVICE_UNAVAILABLE` | 降级为仅数据库模式 |
 
 [TBD: filled by work order F09]

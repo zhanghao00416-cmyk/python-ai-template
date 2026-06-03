@@ -1,10 +1,10 @@
-# Error Code System
+# 错误码体系
 
-## Overview
+## 概述
 
-All platform errors use a **4-digit domain code** (e.g. `2003`). Codes are categorized by domain. No raw stack traces are ever returned to clients.
+所有平台错误使用 **4 位域编码**（如 `2003`）。错误码按域分类。绝不会向客户端返回原始堆栈跟踪。
 
-## Canonical Format (F03+ 必须遵守)
+## 规范格式（F03+ 必须遵守）
 
 | 场景 | `code` 字段类型 | 示例 | 说明 |
 |------|----------------|------|------|
@@ -32,7 +32,7 @@ def parse_error_code(value: str | int) -> int:
 
 **禁止**：REST 返回 `"AI_2003"` 字符串；SSE 返回裸整数 `2003`（除非变更单明确统一）。
 
-## Error Response Format (REST)
+## 错误响应格式（REST）
 
 ```json
 {
@@ -43,141 +43,141 @@ def parse_error_code(value: str | int) -> int:
 }
 ```
 
-## Domain Code Ranges
+## 域编码范围
 
 | Range | Domain | Description |
 |-------|--------|-------------|
-| 1xxx | Auth | Authentication & authorization errors |
-| 2xxx | Intent | Intent classification & routing errors |
-| 3xxx | RAG | Retrieval-augmented generation errors |
-| 4xxx | Multimodal | Multimodal processing errors |
-| 5xxx | Reserved | Reserved for business-specific use |
-| 6xxx | Knowledge | Knowledge base management errors |
-| 7xxx | Agent | Agent engine errors |
-| 8xxx | Workflow | Workflow engine errors |
-| 0xxx | System | General / infrastructure errors |
+| 1xxx | Auth | 认证与授权错误 |
+| 2xxx | Intent | 意图分类与路由错误 |
+| 3xxx | RAG | 检索增强生成错误 |
+| 4xxx | Multimodal | 多模态处理错误 |
+| 5xxx | Reserved | 保留用于业务特定用途 |
+| 6xxx | Knowledge | 知识库管理错误 |
+| 7xxx | Agent | 智能体引擎错误 |
+| 8xxx | Workflow | 工作流引擎错误 |
+| 0xxx | System | 通用 / 基础设施错误 |
 
-## Error Code Definitions
+## 错误码定义
 
-### 0xxx — System / Infrastructure — [TBD: filled by F01, F03]
-
-| Code | Name | HTTP Status | Description |
-|------|------|-------------|-------------|
-| 0001 | INTERNAL_ERROR | 500 | Unhandled internal error |
-| 0002 | CONFIG_ERROR | 500 | Configuration loading or validation error |
-| 0003 | SERVICE_UNAVAILABLE | 503 | Required service unavailable |
-| 0004 | TIMEOUT_ERROR | 504 | Operation timed out (includes semaphore acquire timeout) |
-| 0005 | VALIDATION_ERROR | 400 | Request validation failed |
-| 0006 | RATE_LIMITED | 429 | Request rate limit exceeded |
-| 0007 | DEPENDENCY_ERROR | 502 | External dependency call failed |
-
-### 1xxx — Auth — [TBD: filled by F20]
+### 0xxx — 系统 / 基础设施 — [TBD: filled by F01, F03]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 1001 | AUTH_INVALID_KEY | 401 | Invalid or missing API key |
-| 1002 | AUTH_EXPIRED_KEY | 401 | API key has expired |
-| 1003 | AUTH_FORBIDDEN | 403 | Insufficient permissions |
-| 1004 | AUTH_RATE_LIMITED | 429 | Rate limit exceeded for this key |
-| 1005 | AUTH_BODY_TOO_LARGE | 413 | Request body exceeds max size |
+| 0001 | INTERNAL_ERROR | 500 | 未处理的内部错误 |
+| 0002 | CONFIG_ERROR | 500 | 配置加载或校验错误 |
+| 0003 | SERVICE_UNAVAILABLE | 503 | 所需服务不可用 |
+| 0004 | TIMEOUT_ERROR | 504 | 操作超时（含信号量获取超时） |
+| 0005 | VALIDATION_ERROR | 400 | 请求校验失败 |
+| 0006 | RATE_LIMITED | 429 | 请求速率超限 |
+| 0007 | DEPENDENCY_ERROR | 502 | 外部依赖调用失败 |
 
-### 2xxx — Intent — [TBD: filled by F16]
+### 1xxx — 认证 — [TBD: filled by F20]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 2001 | INTENT_CLASSIFY_FAILED | 500 | Intent classification LLM call failed |
-| 2002 | INTENT_UNKNOWN | 400 | Could not determine intent or missing required field |
-| 2003 | INTENT_TIMEOUT | 504 | Intent classification timed out |
-| 2004 | INTENT_INVALID_INPUT | 400 | Input too short or malformed for classification |
+| 1001 | AUTH_INVALID_KEY | 401 | API 密钥无效或缺失 |
+| 1002 | AUTH_EXPIRED_KEY | 401 | API 密钥已过期 |
+| 1003 | AUTH_FORBIDDEN | 403 | 权限不足 |
+| 1004 | AUTH_RATE_LIMITED | 429 | 该密钥请求速率超限 |
+| 1005 | AUTH_BODY_TOO_LARGE | 413 | 请求体超过最大限制 |
+
+### 2xxx — 意图 — [TBD: filled by F16]
+
+| Code | Name | HTTP Status | Description |
+|------|------|-------------|-------------|
+| 2001 | INTENT_CLASSIFY_FAILED | 500 | 意图分类 LLM 调用失败 |
+| 2002 | INTENT_UNKNOWN | 400 | 无法确定意图或缺少必填字段 |
+| 2003 | INTENT_TIMEOUT | 504 | 意图分类超时 |
+| 2004 | INTENT_INVALID_INPUT | 400 | 输入过短或格式异常，无法分类 |
 
 ### 3xxx — RAG — [TBD: filled by F15b]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 3001 | RAG_COLLECTION_NOT_FOUND | 404 | Requested collection does not exist |
-| 3002 | RAG_RETRIEVAL_FAILED | 400 | Invalid collection name or retrieval query failed |
-| 3003 | RAG_NO_RESULTS | 200 | Retrieval returned no relevant documents |
-| 3004 | RAG_GENERATION_FAILED | 500 | Answer generation LLM call failed |
-| 3005 | RAG_INDEXING_FAILED | 500 | Document indexing failed |
-| 3006 | RAG_DOCUMENT_NOT_FOUND | 404 | Requested document does not exist |
-| 3007 | RAG_RERANK_NOT_ENABLED | 400 | Rerank requested but not implemented |
+| 3001 | RAG_COLLECTION_NOT_FOUND | 404 | 请求的集合不存在 |
+| 3002 | RAG_RETRIEVAL_FAILED | 400 | 集合名称无效或检索查询失败 |
+| 3003 | RAG_NO_RESULTS | 200 | 检索未返回相关文档 |
+| 3004 | RAG_GENERATION_FAILED | 500 | 回答生成 LLM 调用失败 |
+| 3005 | RAG_INDEXING_FAILED | 500 | 文档索引失败 |
+| 3006 | RAG_DOCUMENT_NOT_FOUND | 404 | 请求的文档不存在 |
+| 3007 | RAG_RERANK_NOT_ENABLED | 400 | 请求了重排序但未启用 |
 
-### 4xxx — Multimodal — [TBD: reserved]
-
-| Code | Name | HTTP Status | Description |
-|------|------|-------------|-------------|
-| 4001 | MULTIMODAL_INVALID_INPUT | 400 | Invalid or unreachable multimodal input |
-| 4002 | MULTIMODAL_PROCESSING_FAILED | 500 | Multimodal processing failed |
-
-### 5xxx — Reserved — [TBD: reserved]
+### 4xxx — 多模态 — [TBD: reserved]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 5001 | RESERVED_5001 | - | Reserved for business-specific use |
-| 5002 | RESERVED_5002 | - | Reserved for business-specific use |
-| 5003 | RESERVED_5003 | - | Reserved for business-specific use |
+| 4001 | MULTIMODAL_INVALID_INPUT | 400 | 无效或不可达的多模态输入 |
+| 4002 | MULTIMODAL_PROCESSING_FAILED | 500 | 多模态处理失败 |
 
-### 6xxx — Knowledge — [TBD: filled by F05, F15a/F15b/F15c]
-
-| Code | Name | HTTP Status | Description |
-|------|------|-------------|-------------|
-| 6001 | KB_UPLOAD_FAILED | 500 | File upload failed |
-| 6002 | KB_FILENAME_EXISTS | 409 | Filename already exists |
-| 6003 | KB_FILE_NOT_FOUND | 404 | File not found |
-| 6004 | KB_FORMAT_UNSUPPORTED | 415 | File format unsupported (only markdown) |
-| 6005 | KB_VECTOR_WRITE_FAILED | 500 | Vector write failed |
-| 6006 | KB_CHUNK_LIMIT_EXCEEDED | 413 | Chunk count exceeds max_chunks limit |
-
-### 7xxx — Agent — [TBD: filled by F11, F12]
+### 5xxx — 保留 — [TBD: reserved]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 7001 | AGENT_STATE_INVALID | 400 | Invalid state transition |
-| 7002 | AGENT_TOOL_NOT_FOUND | 404 | Referenced tool not registered |
-| 7003 | AGENT_EXECUTION_FAILED | 500 | Agent execution loop failed |
-| 7004 | AGENT_MAX_ITERATIONS | 500 | Agent exceeded max iterations |
-| 7005 | AGENT_ORCHESTRATION_FAILED | 500 | Multi-agent orchestration failed |
+| 5001 | RESERVED_5001 | - | 保留用于业务特定用途 |
+| 5002 | RESERVED_5002 | - | 保留用于业务特定用途 |
+| 5003 | RESERVED_5003 | - | 保留用于业务特定用途 |
 
-### 8xxx — Workflow — [TBD: filled by F13]
+### 6xxx — 知识库 — [TBD: filled by F05, F15a/F15b/F15c]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 8001 | WORKFLOW_NODE_NOT_FOUND | 404 | Referenced node does not exist |
-| 8002 | WORKFLOW_EDGE_INVALID | 400 | Invalid conditional edge configuration |
-| 8003 | WORKFLOW_EXECUTION_FAILED | 500 | Workflow execution failed |
-| 8004 | WORKFLOW_CYCLE_DETECTED | 400 | Workflow DAG contains a cycle |
-| 8005 | WORKFLOW_STATE_ERROR | 400 | Invalid workflow state transition |
+| 6001 | KB_UPLOAD_FAILED | 500 | 文件上传失败 |
+| 6002 | KB_FILENAME_EXISTS | 409 | 文件名已存在 |
+| 6003 | KB_FILE_NOT_FOUND | 404 | 文件未找到 |
+| 6004 | KB_FORMAT_UNSUPPORTED | 415 | 不支持的文件格式（仅支持 markdown） |
+| 6005 | KB_VECTOR_WRITE_FAILED | 500 | 向量写入失败 |
+| 6006 | KB_CHUNK_LIMIT_EXCEEDED | 413 | 分块数量超过 max_chunks 限制 |
 
-### 9xxx — Task Queue / Prompt / SSE — [TBD: filled by F07, F08, F17]
-
-| Code | Name | HTTP Status | Description |
-|------|------|-------------|-------------|
-| 9001 | TASK_NOT_FOUND | 404 | Referenced task does not exist |
-| 9002 | TASK_ALREADY_RUNNING | 409 | Task is already in running state |
-| 9003 | TASK_SUBMIT_FAILED | 500 | Failed to submit task to queue |
-| 9004 | PROMPT_NOT_FOUND | 404 | Prompt template file not found |
-| 9005 | PROMPT_PATH_INVALID | 400 | Prompt path contains invalid characters or traversal |
-| 9006 | PROMPT_WRITE_FAILED | 500 | Failed to write prompt template |
-| 9007 | SSE_CONNECTION_LOST | 200 | Client disconnected during SSE streaming |
-
-### Model Gateway — uses 11xx per convention — [TBD: filled by F04]
+### 7xxx — 智能体 — [TBD: filled by F11, F12]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 1101 | MODEL_TIMEOUT | 504 | Model call timed out |
-| 1102 | LOCAL_MODEL_UNAVAILABLE | 503 | Local vLLM service unavailable (circuit open) |
-| 1103 | MODEL_FORMAT_ERROR | 502 | Model returned malformed response |
-| 1104 | CLOUD_MODEL_ERROR | 503 | Cloud API call failed (circuit open) |
+| 7001 | AGENT_STATE_INVALID | 400 | 无效的状态转换 |
+| 7002 | AGENT_TOOL_NOT_FOUND | 404 | 引用的工具未注册 |
+| 7003 | AGENT_EXECUTION_FAILED | 500 | 智能体执行循环失败 |
+| 7004 | AGENT_MAX_ITERATIONS | 500 | 智能体超过最大迭代次数 |
+| 7005 | AGENT_ORCHESTRATION_FAILED | 500 | 多智能体编排失败 |
 
-### Infrastructure — uses 12xx — [TBD: filled by F02, F05]
+### 8xxx — 工作流 — [TBD: filled by F13]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
-| 1201 | DATABASE_ERROR | 500 | Database connection or query failed |
-| 1202 | QDRANT_UNAVAILABLE | 503 | Qdrant connection failed |
-| 1203 | REDIS_ERROR | 503 | Redis connection or operation failed |
+| 8001 | WORKFLOW_NODE_NOT_FOUND | 404 | 引用的节点不存在 |
+| 8002 | WORKFLOW_EDGE_INVALID | 400 | 无效的条件边配置 |
+| 8003 | WORKFLOW_EXECUTION_FAILED | 500 | 工作流执行失败 |
+| 8004 | WORKFLOW_CYCLE_DETECTED | 400 | 工作流 DAG 包含环 |
+| 8005 | WORKFLOW_STATE_ERROR | 400 | 无效的工作流状态转换 |
 
-## Error Hierarchy in Code
+### 9xxx — 任务队列 / 提示词 / SSE — [TBD: filled by F07, F08, F17]
+
+| Code | Name | HTTP Status | Description |
+|------|------|-------------|-------------|
+| 9001 | TASK_NOT_FOUND | 404 | 引用的任务不存在 |
+| 9002 | TASK_ALREADY_RUNNING | 409 | 任务已处于运行状态 |
+| 9003 | TASK_SUBMIT_FAILED | 500 | 提交任务到队列失败 |
+| 9004 | PROMPT_NOT_FOUND | 404 | 提示词模板文件未找到 |
+| 9005 | PROMPT_PATH_INVALID | 400 | 提示词路径包含非法字符或路径遍历 |
+| 9006 | PROMPT_WRITE_FAILED | 500 | 写入提示词模板失败 |
+| 9007 | SSE_CONNECTION_LOST | 200 | SSE 流式传输期间客户端断开连接 |
+
+### 模型网关 — 使用 11xx 编码（按约定）— [TBD: filled by F04]
+
+| Code | Name | HTTP Status | Description |
+|------|------|-------------|-------------|
+| 1101 | MODEL_TIMEOUT | 504 | 模型调用超时 |
+| 1102 | LOCAL_MODEL_UNAVAILABLE | 503 | 本地 vLLM 服务不可用（熔断开启） |
+| 1103 | MODEL_FORMAT_ERROR | 502 | 模型返回格式错误的响应 |
+| 1104 | CLOUD_MODEL_ERROR | 503 | 云端 API 调用失败（熔断开启） |
+
+### 基础设施 — 使用 12xx 编码 — [TBD: filled by F02, F05]
+
+| Code | Name | HTTP Status | Description |
+|------|------|-------------|-------------|
+| 1201 | DATABASE_ERROR | 500 | 数据库连接或查询失败 |
+| 1202 | QDRANT_UNAVAILABLE | 503 | Qdrant 连接失败 |
+| 1203 | REDIS_ERROR | 503 | Redis 连接或操作失败 |
+
+## 代码中的错误层级
 
 ```
 AppError (base)
@@ -193,8 +193,8 @@ AppError (base)
 └── TaskError (9xxx)
 ```
 
-## Registration & Lookup — [TBD: filled by F03]
+## 注册与查找 — [TBD: filled by F03]
 
-All error codes are registered in `app/core/errors.py` as a centralized registry. Domain modules raise typed exceptions; the middleware layer catches and maps to structured API responses.
+所有错误码在 `app/core/errors.py` 中注册为集中式注册表。域模块抛出类型化异常；中间件层捕获并映射为结构化 API 响应。
 
 [TBD: filled by work orders F01, F03, F05, F11–F16, F20]

@@ -1,16 +1,16 @@
-# API Contract
+# API 契约
 
-## Overview
+## 概述
 
-This document defines the API contract for the Python AI Template platform. All endpoints follow REST conventions with structured JSON responses and SSE for streaming.
+本文档定义 Python AI Template 平台的 API 契约。所有端点遵循 REST 约定，使用结构化 JSON 响应和 SSE 进行流式传输。
 
-## Base URL
+## 基础 URL
 
 ```
 /api/v1
 ```
 
-## Common Response Envelope
+## 通用响应信封
 
 ```json
 {
@@ -22,7 +22,7 @@ This document defines the API contract for the Python AI Template platform. All 
 }
 ```
 
-Error response:
+错误响应：
 
 ```json
 {
@@ -33,13 +33,13 @@ Error response:
 }
 ```
 
-## Endpoint Registry
+## 端点注册表
 
 ### Health — [filled by F01, enhanced]
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /api/v1/health | Health check with dependency details |
+| GET | /api/v1/health | 健康检查，含依赖详情 |
 
 #### GET /api/v1/health
 
@@ -88,10 +88,10 @@ Error response:
 
 | Field | Description |
 |-------|-------------|
-| status | Overall: `ok` (all healthy), `degraded` (partial), `error` (critical failure) |
-| dependencies.*.status | `ok` = normal, `degraded` = slow but usable, `error` = unavailable |
-| dependencies.llm.channels.*.status | `ok` = normal, `open` = circuit breaker tripped, `half_open` = probing recovery |
-| dependencies.*.latency_ms | Response latency in milliseconds; `null` = not checked or unavailable |
+| status | 总体状态：`ok`（全部健康）、`degraded`（部分降级）、`error`（关键故障） |
+| dependencies.*.status | `ok` = 正常, `degraded` = 慢但可用, `error` = 不可用 |
+| dependencies.llm.channels.*.status | `ok` = 正常, `open` = 熔断器跳开, `half_open` = 探测恢复中 |
+| dependencies.*.latency_ms | 响应延迟（毫秒）；`null` = 未检查或不可用 |
 
 ---
 
@@ -99,11 +99,11 @@ Error response:
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | /api/v1/run | Unified orchestrated entry point (SSE) |
+| POST | /api/v1/run | 统一编排入口（SSE） |
 
-#### POST /api/v1/run — Unified Entry Point (SSE)
+#### POST /api/v1/run — 统一入口（SSE）
 
-The primary entry point for conversational AI. The server orchestrates: intent classification → workflow selection → multi-agent execution → tool calls → SSE streaming response.
+对话 AI 的主入口。服务端编排：意图分类 → 工作流选择 → 多 Agent 执行 → 工具调用 → SSE 流式响应。
 
 **Request body**:
 
@@ -123,15 +123,15 @@ The primary entry point for conversational AI. The server orchestrates: intent c
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| user_id | string | yes | User identifier |
-| session_id | string | yes | Session identifier; auto-created if not exists |
-| query | string | yes | User input |
-| stream | boolean | no | Default true; false returns sync JSON response |
-| intent | string | no | Skip intent classification if caller already knows; e.g. "qa", "chat" |
-| model_override | string | no | Override default model for this request |
-| temperature | float | no | Generation randomness (0.0–1.0) |
-| max_tokens | int | no | Max generation length |
-| metadata | object | no | Extensible business metadata (channel, version, etc.) |
+| user_id | string | yes | 用户标识 |
+| session_id | string | yes | 会话标识；不存在时自动创建 |
+| query | string | yes | 用户输入 |
+| stream | boolean | no | 默认 true；false 返回同步 JSON 响应 |
+| intent | string | no | 跳过意图分类（调用方已知）；如 "qa"、"chat" |
+| model_override | string | no | 本次请求覆盖默认模型 |
+| temperature | float | no | 生成随机性（0.0–1.0） |
+| max_tokens | int | no | 最大生成长度 |
+| metadata | object | no | 可扩展业务元数据（渠道、版本等） |
 
 **Response (SSE)**:
 
@@ -158,31 +158,31 @@ start → [intent]? → [route]? → [agent]* → [tool]* → [citation]* → [h
 }
 ```
 
-Orchestration-specific SSE events (in addition to standard events):
+编排专用 SSE 事件（除标准事件外）：
 
 | Event | Data Fields | Description |
 |-------|-------------|-------------|
-| `intent` | `intent`, `confidence`, `layer_used` | Intent classification result |
-| `route` | `workflow_id`, `intent` | Selected workflow |
-| `agent` | `agent_name`, `step_id` | Agent step begins |
-| `tool` | `tool_name`, `step_id` | Tool call (start/result) |
+| `intent` | `intent`, `confidence`, `layer_used` | 意图分类结果 |
+| `route` | `workflow_id`, `intent` | 选中的工作流 |
+| `agent` | `agent_name`, `step_id` | Agent 步骤开始 |
+| `tool` | `tool_name`, `step_id` | 工具调用（开始/结果） |
 
-**Intent classification for `/run`**: Uses a simplified 4-type model (extensible by business):
+**`/run` 的意图分类**：使用简化四类模型（可由业务扩展）：
 
 | Intent | Description |
 |--------|-------------|
-| `qa` | Knowledge Q&A (default RAG workflow) |
-| `task` | Multi-step task requiring tools |
-| `chat` | Free conversation, no retrieval |
-| `retrieve_only` | Pure retrieval, no generation |
+| `qa` | 知识问答（默认 RAG 工作流） |
+| `task` | 需要工具的多步任务 |
+| `chat` | 自由对话，无检索 |
+| `retrieve_only` | 纯检索，无生成 |
 
-**Integration model**:
+**集成模式**：
 
-| Mode | Usage |
-|------|-------|
-| Conversational | Only `POST /run` |
-| Self-orchestrated | `POST /intent` → call individual capability APIs |
-| Mixed | Upload knowledge via `/kb/collections`; chat via `/run` |
+| 模式 | 用法 |
+|------|------|
+| 对话模式 | 仅 `POST /run` |
+| 自编排模式 | `POST /intent` → 调用各能力 API |
+| 混合模式 | 通过 `/kb/collections` 上传知识；通过 `/run` 对话 |
 
 #### API 选型决策表（禁止混用职责）
 
@@ -208,14 +208,14 @@ Orchestration-specific SSE events (in addition to standard events):
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | /api/v1/chat | Chat completion (auto-create session, SSE or sync) |
-| GET | /api/v1/chat/sessions/{session_id} | Get session details |
-| GET | /api/v1/chat/sessions/{session_id}/messages | List session messages |
-| DELETE | /api/v1/chat/sessions/{session_id} | Delete session (soft delete, cascade messages) |
+| POST | /api/v1/chat | 聊天补全（自动创建会话，SSE 或同步） |
+| GET | /api/v1/chat/sessions/{session_id} | 获取会话详情 |
+| GET | /api/v1/chat/sessions/{session_id}/messages | 列出会话消息 |
+| DELETE | /api/v1/chat/sessions/{session_id} | 删除会话（软删除，级联消息） |
 
 #### POST /api/v1/chat
 
-Session auto-creation: if `session_id` does not exist, a new session is created automatically. First-time fields (`title`, `model_config`) only take effect on creation.
+会话自动创建：如果 `session_id` 不存在，自动创建新会话。首次字段（`title`、`model_config`）仅在创建时生效。
 
 **Request body**:
 
@@ -236,16 +236,16 @@ Session auto-creation: if `session_id` does not exist, a new session is created 
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| user_id | string | yes | User identifier |
-| session_id | string | yes | Caller-generated UUID; auto-created if not exists |
-| query | string | yes | User message |
-| stream | boolean | no | Default true; false returns sync JSON |
-| model_override | string | no | Override default chat model |
-| temperature | float | no | Generation randomness (0.0–1.0) |
-| max_tokens | int | no | Max generation length |
-| title | string | no | Session title; only used when session is first created |
-| model_config | object | no | Model config override; only used when session is first created |
-| metadata | object | no | Extensible business metadata |
+| user_id | string | yes | 用户标识 |
+| session_id | string | yes | 调用方生成的 UUID；不存在时自动创建 |
+| query | string | yes | 用户消息 |
+| stream | boolean | no | 默认 true；false 返回同步 JSON |
+| model_override | string | no | 覆盖默认聊天模型 |
+| temperature | float | no | 生成随机性（0.0–1.0） |
+| max_tokens | int | no | 最大生成长度 |
+| title | string | no | 会话标题；仅在首次创建会话时使用 |
+| model_config | object | no | 模型配置覆盖；仅在首次创建会话时使用 |
+| metadata | object | no | 可扩展业务元数据 |
 
 **Response (SSE)**:
 
@@ -297,10 +297,10 @@ start → [heartbeat]* → chunk* → [citation]? → [usage]? → done
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| limit | int | 20 | Messages per page |
-| offset | int | 0 | Pagination offset |
-| role | string | null | Filter by role: user / assistant / system / tool |
-| before | ISO8601 | null | Messages before this timestamp (cursor-style) |
+| limit | int | 20 | 每页消息数 |
+| offset | int | 0 | 分页偏移 |
+| role | string | null | 按角色过滤：user / assistant / system / tool |
+| before | ISO8601 | null | 此时间戳之前的消息（游标式） |
 
 **Response**:
 
@@ -332,7 +332,7 @@ start → [heartbeat]* → chunk* → [citation]? → [usage]? → done
 
 #### DELETE /api/v1/chat/sessions/{session_id}
 
-Soft delete: marks session as deleted, cascades to all messages (also soft-deleted).
+软删除：标记会话为已删除，级联删除所有消息（同样软删除）。
 
 **Response**:
 
@@ -352,13 +352,13 @@ Soft delete: marks session as deleted, cascades to all messages (also soft-delet
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | /api/v1/kb/collections | Create a collection |
-| GET | /api/v1/kb/collections | List collections |
-| DELETE | /api/v1/kb/collections/{collection_name} | Delete a collection |
-| POST | /api/v1/kb/collections/{collection_name}/documents | Upload document (async) |
-| GET | /api/v1/kb/collections/{collection_name}/documents | List/search documents |
-| DELETE | /api/v1/kb/collections/{collection_name}/documents | Delete documents (batch/clear) |
-| POST | /api/v1/kb/query | RAG query with configurable retrieval |
+| POST | /api/v1/kb/collections | 创建集合 |
+| GET | /api/v1/kb/collections | 列出集合 |
+| DELETE | /api/v1/kb/collections/{collection_name} | 删除集合 |
+| POST | /api/v1/kb/collections/{collection_name}/documents | 上传文档（异步） |
+| GET | /api/v1/kb/collections/{collection_name}/documents | 列出/搜索文档 |
+| DELETE | /api/v1/kb/collections/{collection_name}/documents | 删除文档（批量/清空） |
+| POST | /api/v1/kb/query | RAG 查询（可配置检索策略） |
 
 #### POST /api/v1/kb/collections
 
@@ -375,10 +375,10 @@ Soft delete: marks session as deleted, cascades to all messages (also soft-delet
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| name | string | yes | Collection name (unique) |
-| description | string | no | Collection description |
-| vector_size | int | no | Vector dimension; default from config |
-| metadata | object | no | Extensible collection metadata |
+| name | string | yes | 集合名称（唯一） |
+| description | string | no | 集合描述 |
+| vector_size | int | no | 向量维度；默认从配置读取 |
+| metadata | object | no | 可扩展集合元数据 |
 
 **Response**:
 
@@ -400,9 +400,9 @@ Soft delete: marks session as deleted, cascades to all messages (also soft-delet
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| limit | int | 20 | Collections per page |
-| offset | int | 0 | Pagination offset |
-| name | string | null | Fuzzy search by name |
+| limit | int | 20 | 每页集合数 |
+| offset | int | 0 | 分页偏移 |
+| name | string | null | 按名称模糊搜索 |
 
 **Response**:
 
@@ -429,7 +429,7 @@ Soft delete: marks session as deleted, cascades to all messages (also soft-delet
 
 #### DELETE /api/v1/kb/collections/{collection_name}
 
-**Response** (includes impact scope):
+**Response**（含影响范围）：
 
 ```json
 {
@@ -444,39 +444,39 @@ Soft delete: marks session as deleted, cascades to all messages (also soft-delet
 
 #### POST /api/v1/kb/collections/{collection_name}/documents
 
-Upload a markdown document with chunking strategy and metadata. Processing is async — returns a task_id.
+上传 Markdown 文档，支持分块策略和元数据。处理为异步——返回 task_id。
 
 **Request** (multipart/form-data):
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| file | File | yes | Markdown file (.md) |
-| doc_type | string | no | Metadata: document type (e.g. 技术文档/手册/FAQ) |
-| source | string | no | Metadata: origin (e.g. 内部/外部/爬取) |
-| tag | string | no | Metadata: tag (e.g. 重要/已审核/草稿) |
-| uploader | string | yes | Uploader identifier |
-| chunking_strategy | string | no | Chunking strategy, default from config |
-| chunking_params | object | no | Strategy-specific parameters |
-| enable_parent_child | boolean | no | Enable parent-child chunking mode; default false |
-| parent_chunk_params | object | no | Parent chunk config (only when enable_parent_child=true) |
+| file | File | yes | Markdown 文件（.md） |
+| doc_type | string | no | 元数据：文档类型（如 技术文档/手册/FAQ） |
+| source | string | no | 元数据：来源（如 内部/外部/爬取） |
+| tag | string | no | 元数据：标签（如 重要/已审核/草稿） |
+| uploader | string | yes | 上传者标识 |
+| chunking_strategy | string | no | 分块策略，默认从配置读取 |
+| chunking_params | object | no | 策略参数 |
+| enable_parent_child | boolean | no | 启用父子分块模式；默认 false |
+| parent_chunk_params | object | no | 父分块配置（仅在 enable_parent_child=true 时有效） |
 
-**Chunking strategies**:
+**分块策略**：
 
 | Strategy | Key | Parameters |
 |----------|-----|------------|
-| Fixed + overlap | `fixed_overlap` | `chunk_size` (default 500), `overlap` (default 50) |
-| Delimiter + max length | `delimiter_max` | `delimiters` (default ["\n\n", "\n"]), `max_chunk_size` (default 1000) |
-| Semantic | `semantic` | `similarity_threshold` (default 0.85) |
-| Paragraph | `paragraph` | `min_paragraph_chars` (default 50) |
+| 固定大小 + 重叠 | `fixed_overlap` | `chunk_size`（默认 500）、`overlap`（默认 50） |
+| 分隔符 + 最大长度 | `delimiter_max` | `delimiters`（默认 ["\n\n", "\n"]）、`max_chunk_size`（默认 1000） |
+| 语义分块 | `semantic` | `similarity_threshold`（默认 0.85） |
+| 段落分块 | `paragraph` | `min_paragraph_chars`（默认 50） |
 
-**Parent-child chunking mode**:
+**父子分块模式**：
 
-When `enable_parent_child=true`, the document is chunked at two granularities:
+当 `enable_parent_child=true` 时，文档以两种粒度分块：
 
-1. **Parent chunks**: Large-granularity chunks for context (always uses `fixed_overlap` strategy with `parent_chunk_params`)
-2. **Child chunks**: Fine-granularity chunks for precise matching (uses the selected `chunking_strategy`)
+1. **父块**：大粒度分块，用于上下文（始终使用 `fixed_overlap` 策略配合 `parent_chunk_params`）
+2. **子块**：细粒度分块，用于精确匹配（使用选定的 `chunking_strategy`）
 
-Each child chunk stores a `parent_id` linking to its parent. During retrieval, matching a child chunk automatically returns the parent chunk for full context.
+每个子块存储 `parent_id` 链接到其父块。检索时，匹配子块会自动返回父块以提供完整上下文。
 
 ```json
 {
@@ -489,8 +489,8 @@ Each child chunk stores a `parent_id` linking to its parent. During retrieval, m
 
 | Parameter | Description |
 |-----------|-------------|
-| `parent_chunk_params.chunk_size` | Parent chunk size (default 2000) |
-| `parent_chunk_params.overlap` | Parent chunk overlap (default 200) |
+| `parent_chunk_params.chunk_size` | 父块大小（默认 2000） |
+| `parent_chunk_params.overlap` | 父块重叠（默认 200） |
 
 **Response**:
 
@@ -506,7 +506,7 @@ Each child chunk stores a `parent_id` linking to its parent. During retrieval, m
 }
 ```
 
-Deduplication: if a file with the same name + uploader + collection already exists, return HTTP 409 with existing document_id.
+去重：如果同名称 + 同上传者 + 同集合的文件已存在，返回 HTTP 409 含已有 document_id。
 
 #### GET /api/v1/kb/collections/{collection_name}/documents
 
@@ -514,13 +514,13 @@ Deduplication: if a file with the same name + uploader + collection already exis
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| limit | int | 20 | Documents per page |
-| offset | int | 0 | Pagination offset |
-| filename | string | null | Fuzzy search by filename |
-| doc_type | string | null | Filter by doc_type metadata |
-| source | string | null | Filter by source metadata |
-| tag | string | null | Filter by tag metadata |
-| uploader | string | null | Filter by uploader |
+| limit | int | 20 | 每页文档数 |
+| offset | int | 0 | 分页偏移 |
+| filename | string | null | 按文件名模糊搜索 |
+| doc_type | string | null | 按 doc_type 元数据过滤 |
+| source | string | null | 按 source 元数据过滤 |
+| tag | string | null | 按 tag 元数据过滤 |
+| uploader | string | null | 按上传者过滤 |
 
 **Response**:
 
@@ -551,24 +551,24 @@ Deduplication: if a file with the same name + uploader + collection already exis
 
 #### DELETE /api/v1/kb/collections/{collection_name}/documents
 
-Supports targeted deletion and one-click clear-all with two-step confirmation.
+支持定向删除和一键清空（需两步确认）。
 
 **Query parameters**:
 
 | Param | Type | Required | Description |
 |-------|------|----------|-------------|
-| doc_id | string | no | Delete specific document by ID |
-| doc_type | string | no | Filter: delete all matching doc_type |
-| source | string | no | Filter: delete all matching source |
-| tag | string | no | Filter: delete all matching tag |
-| uploader | string | no | Filter: delete all matching uploader |
-| filename | string | no | Filter: delete matching filename (fuzzy) |
-| clear_all | boolean | no | Clear all documents in the collection |
-| confirm_token | string | no | Confirmation token from pre-check response |
+| doc_id | string | no | 按 ID 删除指定文档 |
+| doc_type | string | no | 过滤：删除所有匹配 doc_type 的文档 |
+| source | string | no | 过滤：删除所有匹配 source 的文档 |
+| tag | string | no | 过滤：删除所有匹配 tag 的文档 |
+| uploader | string | no | 过滤：删除所有匹配 uploader 的文档 |
+| filename | string | no | 过滤：按文件名匹配删除（模糊） |
+| clear_all | boolean | no | 清空集合内所有文档 |
+| confirm_token | string | no | 预检响应返回的确认令牌 |
 
-**Two-step confirmation flow**:
+**两步确认流程**：
 
-1. **Without `confirm_token`**: Returns impact scope + a `confirm_token` (valid 60s). No deletion performed.
+1. **不带 `confirm_token`**：返回影响范围 + `confirm_token`（60 秒有效）。不执行删除。
 
 ```json
 {
@@ -582,7 +582,7 @@ Supports targeted deletion and one-click clear-all with two-step confirmation.
 }
 ```
 
-2. **With `confirm_token`**: Executes deletion.
+2. **带 `confirm_token`**：执行删除。
 
 ```json
 {
@@ -596,7 +596,7 @@ Supports targeted deletion and one-click clear-all with two-step confirmation.
 
 #### POST /api/v1/kb/query
 
-RAG retrieval and generation with configurable strategies.
+RAG 检索与生成，支持可配置策略。
 
 **Request body**:
 
@@ -623,31 +623,31 @@ RAG retrieval and generation with configurable strategies.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| user_id | string | yes | User identifier |
-| session_id | string | no | Session for context |
-| query | string | yes | Search query |
-| collection_names | string[] | no | Target collections; default all |
-| doc_type | string | no | Filter by doc_type metadata |
-| source | string | no | Filter by source metadata |
-| tag | string | no | Filter by tag metadata |
-| uploader | string | no | Filter by uploader |
-| retrieval_strategy | string | no | See below; default `hybrid` |
-| top_k | int | no | Number of results; default 5 |
-| score_threshold | float | no | Minimum similarity score; default 0.5 |
-| enable_rerank | boolean | no | Enable reranking; default false |
-| stream | boolean | no | SSE or sync; default true |
-| model_override | string | no | Override generation model |
-| temperature | float | no | Generation randomness |
-| max_tokens | int | no | Max generation length |
+| user_id | string | yes | 用户标识 |
+| session_id | string | no | 会话（用于上下文） |
+| query | string | yes | 搜索查询 |
+| collection_names | string[] | no | 目标集合；默认全部 |
+| doc_type | string | no | 按 doc_type 元数据过滤 |
+| source | string | no | 按 source 元数据过滤 |
+| tag | string | no | 按 tag 元数据过滤 |
+| uploader | string | no | 按上传者过滤 |
+| retrieval_strategy | string | no | 见下表；默认 `hybrid` |
+| top_k | int | no | 返回结果数；默认 5 |
+| score_threshold | float | no | 最低相似度分数；默认 0.5 |
+| enable_rerank | boolean | no | 启用重排序；默认 false |
+| stream | boolean | no | SSE 或同步；默认 true |
+| model_override | string | no | 覆盖生成模型 |
+| temperature | float | no | 生成随机性 |
+| max_tokens | int | no | 最大生成长度 |
 
-**Retrieval strategies**:
+**检索策略**：
 
 | Strategy | Key | Description |
 |----------|-----|-------------|
-| Keyword | `keyword` | Sparse vector / full-text search |
-| Similarity | `similarity` | Dense vector search |
-| Hybrid | `hybrid` | Combine keyword + similarity (default) |
-| RRF | `rrf` | Reciprocal Rank Fusion |
+| 关键词 | `keyword` | 稀疏向量 / 全文搜索 |
+| 语义相似 | `similarity` | 稠密向量搜索 |
+| 混合 | `hybrid` | 关键词 + 相似度组合（默认） |
+| RRF | `rrf` | 倒数排名融合 |
 
 **Response (SSE)**:
 
@@ -695,11 +695,11 @@ start → [heartbeat]* → [citation]? → chunk* → [usage]? → done
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | /api/v1/intent | Classify user intent (three-layer + multi-intent) |
+| POST | /api/v1/intent | 意图分类（三层 + 多意图） |
 
 #### POST /api/v1/intent
 
-Three-layer classification pipeline: keyword → similarity → LLM. Each earlier layer can short-circuit. Supports multi-intent detection with query reconstruction.
+三层分类流水线：关键词 → 相似度 → LLM。较早层可短路返回。支持多意图检测与查询重构。
 
 **Request body**:
 
@@ -719,25 +719,25 @@ Three-layer classification pipeline: keyword → similarity → LLM. Each earlie
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| user_id | string | yes | User identifier |
-| session_id | string | yes | Session identifier |
-| query | string | yes | User input |
-| candidates | string[] | no | Limit classification scope; default all configured intents |
-| options.keyword_enabled | boolean | no | Enable L1 keyword matching; default true |
-| options.similarity_enabled | boolean | no | Enable L2 similarity matching; default true |
-| options.multi_intent_enabled | boolean | no | Enable multi-intent detection; default true |
+| user_id | string | yes | 用户标识 |
+| session_id | string | yes | 会话标识 |
+| query | string | yes | 用户输入 |
+| candidates | string[] | no | 限定分类范围；默认全部已配置意图 |
+| options.keyword_enabled | boolean | no | 启用 L1 关键词匹配；默认 true |
+| options.similarity_enabled | boolean | no | 启用 L2 相似度匹配；默认 true |
+| options.multi_intent_enabled | boolean | no | 启用多意图检测；默认 true |
 
-**Three-layer pipeline**:
+**三层流水线**：
 
 ```
-L1: Keyword matching (fastest, zero LLM cost)
-    ↓ not matched or low confidence
-L2: Similarity matching (embedding-based, low cost)
-    ↓ not matched or low confidence
-L3: LLM classification (most accurate, highest cost)
+L1: 关键词匹配（最快，零 LLM 开销）
+    ↓ 未匹配或低置信度
+L2: 相似度匹配（基于嵌入向量，低开销）
+    ↓ 未匹配或低置信度
+L3: LLM 分类（最准确，最高开销）
 ```
 
-**Intent configuration** (in `configs/default.yaml`):
+**意图配置**（在 `configs/default.yaml` 中）：
 
 ```yaml
 intent:
@@ -766,14 +766,14 @@ intent:
     max_intents: 3
 ```
 
-**Default intent types** (extensible by business via prompt):
+**默认意图类型**（可由业务通过 prompt 扩展）：
 
 | Intent | Description |
 |--------|-------------|
-| `qa` | Knowledge Q&A |
-| `task` | Multi-step task requiring tools |
-| `chat` | Free conversation |
-| `retrieve_only` | Pure retrieval, no generation |
+| `qa` | 知识问答 |
+| `task` | 需要工具的多步任务 |
+| `chat` | 自由对话 |
+| `retrieve_only` | 纯检索，无生成 |
 
 **Response**:
 
@@ -803,40 +803,40 @@ intent:
 
 | Field | Description |
 |-------|-------------|
-| intent | Primary intent (highest confidence); this is the one to execute |
-| confidence | Primary intent confidence (0.0–1.0) |
-| query | Reconstructed full query for primary intent (resolves subject omission) |
-| layer_used | Which layer resolved: `keyword` / `similarity` / `llm` |
-| routing | Recommended routing for primary intent |
-| sub_intents | Additional intents (not executed, returned for caller orchestration) |
-| sub_intents[].query | Reconstructed full query (resolves subject omission) |
-| sub_intents[].original_query | Original text fragment |
+| intent | 主意图（最高置信度）；此为应执行的意图 |
+| confidence | 主意图置信度（0.0–1.0） |
+| query | 主意图重构后的完整查询（解析主语省略） |
+| layer_used | 解析层：`keyword` / `similarity` / `llm` |
+| routing | 主意图推荐路由 |
+| sub_intents | 附带意图（不执行，返回供调用方编排） |
+| sub_intents[].query | 重构后的完整查询（解析主语省略） |
+| sub_intents[].original_query | 原始文本片段 |
 
 ---
 
-### Prompt Admin — [TBD: filled by F17]
+### Prompt 管理 — [TBD: filled by F17]
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/prompts` | Query prompt templates (list + detail with filters) |
-| PUT | `/api/v1/prompts/{name}` | Modify prompt (auto version increment + rollback) |
-| GET | `/api/v1/prompts/{name}/versions` | Prompt version history |
-| POST | `/api/v1/prompts/{name}/reset` | Reset to baseline version |
+| GET | `/api/v1/prompts` | 查询 Prompt 模板（列表 + 带过滤的详情） |
+| PUT | `/api/v1/prompts/{name}` | 修改 Prompt（自动版本递增 + 回滚） |
+| GET | `/api/v1/prompts/{name}/versions` | Prompt 版本历史 |
+| POST | `/api/v1/prompts/{name}/reset` | 重置为基线版本 |
 
 #### GET /api/v1/prompts
 
-Query templates with pagination and filters. When `name` filter matches a single result, returns full detail (including content).
+查询模板，支持分页和过滤。当 `name` 过滤条件精确匹配单条结果时，返回完整详情（含内容）。
 
 **Query parameters**:
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| limit | int | 20 | Templates per page |
-| offset | int | 0 | Pagination offset |
-| directory | string | null | Filter by directory (e.g. "agents", "skills") |
-| name | string | null | Fuzzy search by template name; exact match returns detail |
+| limit | int | 20 | 每页模板数 |
+| offset | int | 0 | 分页偏移 |
+| directory | string | null | 按目录过滤（如 "agents"、"skills"） |
+| name | string | null | 按模板名模糊搜索；精确匹配返回详情 |
 
-**Response (list)**:
+**Response (列表)**:
 
 ```json
 {
@@ -859,7 +859,7 @@ Query templates with pagination and filters. When `name` filter matches a single
 }
 ```
 
-**Response (single, exact name match)**:
+**Response (单条，精确名称匹配)**:
 
 ```json
 {
@@ -880,7 +880,7 @@ Query templates with pagination and filters. When `name` filter matches a single
 
 #### PUT /api/v1/prompts/{name}
 
-Modify prompt content or rollback to a specific version. `content` and `rollback_version` are mutually exclusive.
+修改 Prompt 内容或回滚到指定版本。`content` 和 `rollback_version` 互斥。
 
 **Request body**:
 
@@ -894,13 +894,13 @@ Modify prompt content or rollback to a specific version. `content` and `rollback
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| content | string | no* | New prompt content; auto-extract variables |
-| description | string | no | Updated description |
-| rollback_version | int | no* | Rollback to specific version; mutually exclusive with content |
+| content | string | no* | 新 Prompt 内容；自动提取变量 |
+| description | string | no | 更新描述 |
+| rollback_version | int | no* | 回滚到指定版本；与 content 互斥 |
 
-*At least one of `content` or `rollback_version` must be provided.
+*`content` 和 `rollback_version` 至少提供一个。
 
-Version history: each update or rollback increments `version`. All previous versions are retained in `prompt_templates` table.
+版本历史：每次更新或回滚递增 `version`。所有历史版本保留在 `prompt_templates` 表中。
 
 **Response**:
 
@@ -918,7 +918,7 @@ Version history: each update or rollback increments `version`. All previous vers
 
 #### GET /api/v1/prompts/{name}/versions
 
-List all historical versions of a prompt template.
+列出 Prompt 模板的所有历史版本。
 
 **Response**:
 
@@ -940,7 +940,7 @@ List all historical versions of a prompt template.
 
 #### POST /api/v1/prompts/{name}/reset
 
-Reset prompt to baseline content from `prompts/` directory. Baseline files are the source of truth loaded at startup.
+将 Prompt 重置为 `prompts/` 目录中的基线内容。基线文件是启动时加载的事实来源。
 
 **Response**:
 
@@ -963,13 +963,13 @@ Reset prompt to baseline content from `prompts/` directory. Baseline files are t
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/agent/run` | Execute agent task (SSE) |
-| GET | `/api/v1/agent/trajectories` | List trajectories by session |
-| GET | `/api/v1/agent/trajectories/{task_id}` | Get trajectory detail |
+| POST | `/api/v1/agent/run` | 执行 Agent 任务（SSE） |
+| GET | `/api/v1/agent/trajectories` | 按会话列出轨迹 |
+| GET | `/api/v1/agent/trajectories/{task_id}` | 获取轨迹详情 |
 
 #### POST /api/v1/agent/run
 
-Execute an agent task with specified engine type, tools and skills. Supports react (dynamic), workflow (pre-defined DAG), and orchestrator (multi-agent) modes.
+使用指定引擎类型、工具和技能执行 Agent 任务。支持 react（动态）、workflow（预定义 DAG）和 orchestrator（多 Agent）模式。
 
 **Request body**:
 
@@ -991,30 +991,30 @@ Execute an agent task with specified engine type, tools and skills. Supports rea
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| user_id | string | yes | User identifier |
-| session_id | string | yes | Session identifier |
-| query | string | yes | Task description / user input |
-| agent_type | string | no | Engine type: `react` (default) / `workflow` / `orchestrator` |
-| agent_name | string | no | Role name from `configs/agents.yaml`; loads prompt, default tools/skills, model |
-| tools | string[] | no | Override allowed tools; default from agent config or all available |
-| skills | string[] | no | Override allowed skills; skill-used tools are masked from direct tool access |
-| max_steps | int | no | Max execution steps; default 10, prevents infinite loops |
-| stream | boolean | no | Default true; false returns sync JSON |
-| model_override | string | no | Override model for this run |
-| metadata | object | no | Extensible business metadata |
+| user_id | string | yes | 用户标识 |
+| session_id | string | yes | 会话标识 |
+| query | string | yes | 任务描述 / 用户输入 |
+| agent_type | string | no | 引擎类型：`react`（默认）/ `workflow` / `orchestrator` |
+| agent_name | string | no | `configs/agents.yaml` 中的角色名；加载 prompt、默认工具/技能、模型 |
+| tools | string[] | no | 覆盖允许的工具；默认从 Agent 配置或全部可用工具获取 |
+| skills | string[] | no | 覆盖允许的技能；技能使用的工具从直接工具列表中屏蔽 |
+| max_steps | int | no | 最大执行步数；默认 10，防止无限循环 |
+| stream | boolean | no | 默认 true；false 返回同步 JSON |
+| model_override | string | no | 本次运行覆盖模型 |
+| metadata | object | no | 可扩展业务元数据 |
 
-**Tool / Skill / MCP hierarchy**:
+**工具 / 技能 / MCP 层级**：
 
 | Type | Description | Source |
 |------|-------------|--------|
-| Tool | Atomic operation | Built-in + MCP registered (MCP is transparent to caller) |
-| Skill | Multi-step orchestration (prompt + steps + tools) | `skills/` directory definitions |
+| Tool | 原子操作 | 内置 + MCP 注册（MCP 对调用方透明） |
+| Skill | 多步编排（prompt + 步骤 + 工具） | `skills/` 目录定义 |
 
-Priority: `request override` > `agent config` > `all available`
+优先级：`请求覆盖` > `Agent 配置` > `全部可用`
 
-Mutual exclusion: if a skill uses a tool (e.g. `rag_answer` uses `kb_search`), that tool is masked from the agent's direct tool list to prevent conflict.
+互斥：如果技能使用了某工具（如 `rag_answer` 使用 `kb_search`），该工具从 Agent 直接工具列表中屏蔽以防止冲突。
 
-**Agent configuration** (`configs/agents.yaml`):
+**Agent 配置**（`configs/agents.yaml`）：
 
 ```yaml
 agents:
@@ -1026,7 +1026,7 @@ agents:
     max_steps: 8
 ```
 
-**Tool registration** (`configs/default.yaml`):
+**工具注册**（`configs/default.yaml`）：
 
 ```yaml
 tools:
@@ -1047,12 +1047,12 @@ start → [agent]* → [tool]* → [heartbeat]* → chunk* → [citation]? → [
                                                                         ↘ error (anytime)
 ```
 
-SSE events specific to Agent:
+Agent 专用 SSE 事件：
 
 | Event | Data Fields | Description |
 |-------|-------------|-------------|
-| `agent` | `agent_name`, `step_id`, `state` | Agent state change (IDLE/THINKING/ACTING/OBSERVING/DONE) |
-| `tool` | `tool_name`, `step_id`, `status` | Tool call start/result |
+| `agent` | `agent_name`, `step_id`, `state` | Agent 状态变更（IDLE/THINKING/ACTING/OBSERVING/DONE） |
+| `tool` | `tool_name`, `step_id`, `status` | 工具调用开始/结果 |
 
 **Response (sync, stream=false)**:
 
@@ -1079,16 +1079,16 @@ SSE events specific to Agent:
 
 #### GET /api/v1/agent/trajectories
 
-List agent execution trajectories, filtered by session.
+列出 Agent 执行轨迹，按会话过滤。
 
 **Query parameters**:
 
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| session_id | string | null | Filter by session ID |
-| agent_name | string | null | Filter by agent name |
-| limit | int | 20 | Results per page |
-| offset | int | 0 | Pagination offset |
+| session_id | string | null | 按会话 ID 过滤 |
+| agent_name | string | null | 按 Agent 名称过滤 |
+| limit | int | 20 | 每页结果数 |
+| offset | int | 0 | 分页偏移 |
 
 **Response**:
 
@@ -1116,7 +1116,7 @@ List agent execution trajectories, filtered by session.
 
 #### GET /api/v1/agent/trajectories/{task_id}
 
-Get detailed trajectory for a single agent execution.
+获取单次 Agent 执行的详细轨迹。
 
 **Response**:
 
@@ -1171,12 +1171,12 @@ Get detailed trajectory for a single agent execution.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/workflow/run` | Execute workflow (SSE) |
-| GET | `/api/v1/workflow/runs/{task_id}` | Get workflow execution result |
+| POST | `/api/v1/workflow/run` | 执行工作流（SSE） |
+| GET | `/api/v1/workflow/runs/{task_id}` | 获取工作流执行结果 |
 
 #### POST /api/v1/workflow/run
 
-Execute a pre-defined workflow DAG. Workflows are defined in `workflows/` directory and composed in Python code (not a visual canvas).
+执行预定义的工作流 DAG。工作流定义在 `workflows/` 目录，使用 Python 代码编排（非可视化画布）。
 
 **Request body**:
 
@@ -1193,12 +1193,12 @@ Execute a pre-defined workflow DAG. Workflows are defined in `workflows/` direct
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| user_id | string | yes | User identifier |
-| session_id | string | yes | Session identifier |
-| workflow_id | string | yes | Workflow name from `workflows/` directory |
-| inputs | object | no | Key-value input parameters for the workflow |
-| stream | boolean | no | Default true; false returns sync JSON |
-| metadata | object | no | Extensible business metadata |
+| user_id | string | yes | 用户标识 |
+| session_id | string | yes | 会话标识 |
+| workflow_id | string | yes | `workflows/` 目录中的工作流名称 |
+| inputs | object | no | 工作流的键值输入参数 |
+| stream | boolean | no | 默认 true；false 返回同步 JSON |
+| metadata | object | no | 可扩展业务元数据 |
 
 **Response (SSE)**:
 
@@ -1207,11 +1207,11 @@ start → [progress]* → [agent]* → [tool]* → [heartbeat]* → chunk* → [
                                                                         ↘ error (anytime)
 ```
 
-SSE events specific to Workflow:
+Workflow 专用 SSE 事件：
 
 | Event | Data Fields | Description |
 |-------|-------------|-------------|
-| `progress` | `current`, `total`, `node` | Node execution progress |
+| `progress` | `current`, `total`, `node` | 节点执行进度 |
 
 **Response (sync, stream=false)**:
 
@@ -1238,7 +1238,7 @@ SSE events specific to Workflow:
 
 #### GET /api/v1/workflow/runs/{task_id}
 
-Get execution result and per-node status for a workflow run.
+获取工作流运行的执行结果和各节点状态。
 
 **Response**:
 
@@ -1267,12 +1267,12 @@ Get execution result and per-node status for a workflow run.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/v1/tasks` | Submit async task |
-| GET | `/api/v1/tasks/{task_id}` | Query task status (unified for all async sources) |
+| POST | `/api/v1/tasks` | 提交异步任务 |
+| GET | `/api/v1/tasks/{task_id}` | 查询任务状态（统一所有异步来源） |
 
 #### POST /api/v1/tasks
 
-Submit a custom async task. For AI-driven tasks, use `/agent/run` or `/workflow/run` instead. This endpoint is for pure computation / IO tasks that don't require LLM (batch import, batch evaluation, embedding generation, etc.).
+提交自定义异步任务。AI 驱动的任务请使用 `/agent/run` 或 `/workflow/run`。此端点适用于不需要 LLM 的纯计算/IO 任务（批量导入、批量评估、嵌入生成等）。
 
 **Request body**:
 
@@ -1287,10 +1287,10 @@ Submit a custom async task. For AI-driven tasks, use `/agent/run` or `/workflow/
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| task_type | string | yes | Task type: `batch_import` / `batch_eval` / `batch_embed` / custom |
-| input_data | object | no | Task input payload (free-form key-value) |
-| callback_url | string | no | URL to POST notification when task completes |
-| metadata | object | no | Extensible business metadata |
+| task_type | string | yes | 任务类型：`batch_import` / `batch_eval` / `batch_embed` / 自定义 |
+| input_data | object | no | 任务输入载荷（自由键值） |
+| callback_url | string | no | 任务完成时 POST 通知的 URL |
+| metadata | object | no | 可扩展业务元数据 |
 
 **Response**:
 
@@ -1308,7 +1308,7 @@ Submit a custom async task. For AI-driven tasks, use `/agent/run` or `/workflow/
 
 #### GET /api/v1/tasks/{task_id}
 
-Unified task status query for all async sources: Agent, Workflow, KB upload, and custom tasks. Use `task_type` to distinguish source.
+统一任务状态查询，适用于所有异步来源：Agent、Workflow、KB 上传和自定义任务。使用 `task_type` 区分来源。
 
 **Response**:
 
@@ -1332,77 +1332,77 @@ Unified task status query for all async sources: Agent, Workflow, KB upload, and
 
 ---
 
-### Observability — [TBD: filled by F18]
+### 可观测性 — [TBD: filled by F18]
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/metrics` | Prometheus metrics endpoint |
+| GET | `/metrics` | Prometheus 指标端点 |
 
 #### GET /metrics
 
-Prometheus-format metrics. Not under `/api/v1` prefix (follows Prometheus convention).
+Prometheus 格式指标。不在 `/api/v1` 前缀下（遵循 Prometheus 约定）。
 
-**Metrics registry**:
+**指标注册表**：
 
 | Metric | Type | Labels | Description |
 |--------|------|--------|-------------|
-| `llm_request_total` | Counter | provider, model, task_type | LLM call count |
-| `llm_request_duration_seconds` | Histogram | provider, model | LLM call latency |
-| `llm_tokens_total` | Counter | provider, model, direction (input/output) | Token usage |
-| `llm_circuit_breaker_state` | Gauge | provider, channel | Circuit breaker state (0=closed, 1=open, 2=half_open) |
-| `http_request_total` | Counter | method, path, status | HTTP request count |
-| `http_request_duration_seconds` | Histogram | method, path | HTTP request latency |
-| `kb_document_count` | Gauge | collection | Document count per collection |
-| `kb_query_duration_seconds` | Histogram | collection, strategy | RAG query latency |
-| `agent_step_total` | Counter | agent_name, agent_type | Agent execution step count |
-| `agent_step_duration_seconds` | Histogram | agent_name | Agent single step latency |
+| `llm_request_total` | Counter | provider, model, task_type | LLM 调用次数 |
+| `llm_request_duration_seconds` | Histogram | provider, model | LLM 调用延迟 |
+| `llm_tokens_total` | Counter | provider, model, direction (input/output) | Token 使用量 |
+| `llm_circuit_breaker_state` | Gauge | provider, channel | 熔断器状态（0=关闭, 1=打开, 2=半开） |
+| `http_request_total` | Counter | method, path, status | HTTP 请求次数 |
+| `http_request_duration_seconds` | Histogram | method, path | HTTP 请求延迟 |
+| `kb_document_count` | Gauge | collection | 每集合文档数 |
+| `kb_query_duration_seconds` | Histogram | collection, strategy | RAG 查询延迟 |
+| `agent_step_total` | Counter | agent_name, agent_type | Agent 执行步数 |
+| `agent_step_duration_seconds` | Histogram | agent_name | Agent 单步延迟 |
 
 ---
 
-## SSE Event Protocol
+## SSE 事件协议
 
-All SSE streaming endpoints follow the same event protocol. Events are sent in order:
+所有 SSE 流式端点遵循相同的事件协议。事件按顺序发送：
 
 ```
 start → [intent]? → [route]? → [heartbeat]* → chunk* → [structured]? → [citation]? → [usage]? → done
-              → [agent]* → [tool]* → [progress]*
-                                                                    ↘ error (anytime)
+               → [agent]* → [tool]* → [progress]*
+                                                                     ↘ error (anytime)
 ```
 
-### Event Types
+### 事件类型
 
 | Event | Direction | Data Fields | Description |
 |-------|-----------|-------------|-------------|
-| `start` | Server → Client | `intent`, `user_id`, `session_id` | Stream begins; intent indicates which domain (qa/chat/task/retrieve_only/agent/workflow) |
-| `intent` | Server → Client | `intent`, `confidence`, `layer_used` | Intent classification result |
-| `chunk` | Server → Client | `content` | Streaming text content token |
-| `structured` | Server → Client | `data`, `user_id?`, `session_id?` | Structured data payload |
-| `citation` | Server → Client | `sources` | Reference sources from knowledge base retrieval |
-| `heartbeat` | Server → Client | `ts` | Keep-alive during long operations; interval defined by `SSE_HEARTBEAT_INTERVAL` config |
-| `progress` | Server → Client | `current`, `total` | Progress indicator for multi-step operations |
-| `usage` | Server → Client | `input_tokens`, `output_tokens`, `model` | Token usage statistics; must be sent before `done` |
-| `done` | Server → Client | `reason` | Stream completed successfully; reason typically "complete" |
-| `error` | Server → Client | `code`, `message` | Error occurred; code is AI_xxxx error code from ERROR_CODE.md |
+| `start` | 服务端 → 客户端 | `intent`, `user_id`, `session_id` | 流开始；intent 指示所属域（qa/chat/task/retrieve_only/agent/workflow） |
+| `intent` | 服务端 → 客户端 | `intent`, `confidence`, `layer_used` | 意图分类结果 |
+| `chunk` | 服务端 → 客户端 | `content` | 流式文本内容 token |
+| `structured` | 服务端 → 客户端 | `data`, `user_id?`, `session_id?` | 结构化数据载荷 |
+| `citation` | 服务端 → 客户端 | `sources` | 知识库检索的引用来源 |
+| `heartbeat` | 服务端 → 客户端 | `ts` | 长操作期间保持连接；间隔由 `SSE_HEARTBEAT_INTERVAL` 配置定义 |
+| `progress` | 服务端 → 客户端 | `current`, `total` | 多步操作进度指示 |
+| `usage` | 服务端 → 客户端 | `input_tokens`, `output_tokens`, `model` | Token 使用统计；必须在 `done` 之前发送 |
+| `done` | 服务端 → 客户端 | `reason` | 流成功完成；reason 通常为 "complete" |
+| `error` | 服务端 → 客户端 | `code`, `message` | 发生错误；code 为 ERROR_CODE.md 中的 AI_xxxx 错误码 |
 
-### SSE Endpoint Behavior
+### SSE 端点行为
 
-- **Heartbeat**: Sent every `SSE_HEARTBEAT_INTERVAL` seconds (default 15) during LLM calls to prevent connection timeout
-- **Disconnect detection**: Server checks `request.is_disconnected` before each event; stops stream on disconnect
-- **Error handling**: If an error occurs mid-stream, an `error` event is sent followed by stream termination (no `done` event)
-- **Event ordering**: `start` is always first; `done` or `error` is always last; other events may appear in domain-specific order
-- **Usage**: `usage` event is sent before `done` on all streaming endpoints that involve LLM calls
+- **心跳**：LLM 调用期间每隔 `SSE_HEARTBEAT_INTERVAL` 秒（默认 15）发送，防止连接超时
+- **断连检测**：服务端在每个事件前检查 `request.is_disconnected`；断连时停止流
+- **错误处理**：如果流中途发生错误，发送 `error` 事件后终止流（不发送 `done` 事件）
+- **事件顺序**：`start` 始终为首；`done` 或 `error` 始终为尾；其他事件按域特定顺序出现
+- **使用量**：所有涉及 LLM 调用的流式端点，在 `done` 之前发送 `usage` 事件
 
-## Authentication — [TBD: filled by F20]
+## 认证 — [TBD: filled by F20]
 
-- API Key header: `X-API-Key`
-- Rate limiting via Redis (configurable thresholds)
+- API Key 头：`X-API-Key`
+- 通过 Redis 限流（可配置阈值）
 
-## Request Context Propagation
+## 请求上下文传播
 
-Every request must carry:
-- `trace_id` — auto-generated or from header `X-Trace-Id`
-- `request_id` — auto-generated UUID
-- `user_id` — from auth or header `X-User-Id`
-- `session_id` — from request body or header
+每个请求必须携带：
+- `trace_id` — 自动生成或来自请求头 `X-Trace-Id`
+- `request_id` — 自动生成 UUID
+- `user_id` — 来自认证或请求头 `X-User-Id`
+- `session_id` — 来自请求体或请求头
 
 [TBD: filled by work orders F01, F06, F07, F14–F17, F20]

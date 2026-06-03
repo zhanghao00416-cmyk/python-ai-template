@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
@@ -87,6 +88,20 @@ class ServerSettings(BaseSettings):
     debug_sse_output: bool = False
 
     model_config = {"env_prefix": "SERVER_"}
+
+    @field_validator("port", mode="before")
+    @classmethod
+    def _coerce_port(cls, value: object) -> object:
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+        return value
+
+    @field_validator("debug", "debug_sse_output", mode="before")
+    @classmethod
+    def _coerce_bool(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower() in ("1", "true", "yes", "on")
+        return value
 
 
 class DatabaseSettings(BaseSettings):
@@ -243,6 +258,25 @@ def _set_nested(d: dict, path: str, value: Any) -> None:
     d[keys[-1]] = value
 
 
+def _coerce_setting_value(section: BaseSettings, key: str, value: Any) -> Any:
+    """Coerce env/.env string values to match section field types."""
+    field = type(section).model_fields.get(key)
+    if field is None:
+        return value
+    ann = field.annotation
+    if ann is int:
+        if isinstance(value, str) and value.lstrip("-").isdigit():
+            return int(value)
+        if isinstance(value, str):
+            try:
+                return int(value)
+            except ValueError:
+                return value
+    if ann is bool and isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on")
+    return value
+
+
 def _apply_yaml_to_settings(settings: Settings, cfg: dict[str, Any]) -> None:
     for section_name, section_data in cfg.items():
         if not isinstance(section_data, dict):
@@ -250,12 +284,14 @@ def _apply_yaml_to_settings(settings: Settings, cfg: dict[str, Any]) -> None:
         section = getattr(settings, section_name, None)
         if section is None:
             continue
+        payload = section.model_dump()
         for key, value in section_data.items():
-            if hasattr(section, key):
-                try:
-                    setattr(section, key, value)
-                except (ValidationError, TypeError):
-                    pass
+            if key in payload:
+                payload[key] = _coerce_setting_value(section, key, value)
+        try:
+            setattr(settings, section_name, type(section)(**payload))
+        except (ValidationError, TypeError):
+            pass
 
 
 try:

@@ -1,118 +1,118 @@
-# Domain Responsibility Map
+# 域职责映射
 
-## Overview
+## 概述
 
-This document maps each domain package to its responsibilities and defines the boundaries between domains. Domains live under `app/domain/` and follow strict layering rules from `ARCHITECTURE.md §3`.
+本文档将每个域包映射到其职责，并定义域之间的边界。域位于 `app/domain/` 下，遵循 `ARCHITECTURE.md §3` 中的严格分层规则。
 
-## Layering Rules (Recap)
+## 分层规则（回顾）
 
 ```
 api → domain → services → infra
-domain → agent (orchestration)
-domain → workflow (orchestration)
-domain → tools (usage)
-domain ← agent/workflow (domain is the caller)
+domain → agent (编排调用)
+domain → workflow (编排调用)
+domain → tools (使用)
+domain ← agent/workflow (域编排是调用者)
 ```
 
-Domains must not:
-- Directly access provider SDKs (must go through `services/` or `infra/`)
-- Hard-code prompts (must use `services/prompt_manager`)
-- Directly call LLM providers (must use `services/llm/gateway`)
+域禁止：
+- 直接访问提供商 SDK（必须通过 `services/` 或 `infra/`）
+- 硬编码提示词（必须使用 `services/prompt_manager`）
+- 直接调用 LLM 提供商（必须使用 `services/llm/gateway`）
 
-## Domain Registry
+## 域注册表
 
 ### chat — [TBD: filled by F14]
 
-| Aspect | Detail |
-|--------|--------|
-| Package | `app/domain/chat/` |
-| Responsibility | Chat conversation management, message handling, context window assembly |
-| Key Files | `service.py`, `repo.py`, `schemas.py` |
-| Depends On | `services/llm`, `services/context`, `services/sse_stream` |
-| API Endpoints | POST /api/v1/chat, GET/DELETE session, GET messages |
-| Data Model | `sessions`, `messages` |
-| Work Orders | F14 |
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/chat/` |
+| 职责 | 聊天对话管理、消息处理、上下文窗口组装 |
+| 关键文件 | `service.py`, `repo.py`, `schemas.py` |
+| 依赖 | `services/llm`, `services/context`, `services/sse_stream` |
+| API 端点 | POST /api/v1/chat, GET/DELETE session, GET messages |
+| 数据模型 | `sessions`, `messages` |
+| 工单 | F14 |
 
 ### knowledge — [TBD: filled by F05, F15a/F15b/F15c]
 
-| Aspect | Detail |
-|--------|--------|
-| Package | `app/domain/knowledge/` |
-| Responsibility | Knowledge base management: collections, documents, indexing, RAG retrieval |
-| Key Files | `service.py`, `repo.py`, `schemas.py` |
-| Depends On | `services/llm`, `infra/vector_store`, `services/prompt_manager` |
-| API Endpoints | Collection CRUD, document upload/delete, RAG query |
-| Data Model | Qdrant collections, document metadata |
-| Work Orders | F05, F15a, F15b, F15c |
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/knowledge/` |
+| 职责 | 知识库管理：集合、文档、索引、RAG 检索 |
+| 关键文件 | `service.py`, `repo.py`, `schemas.py` |
+| 依赖 | `services/llm`, `infra/vector_store`, `services/prompt_manager` |
+| API 端点 | Collection CRUD, document upload/delete, RAG query |
+| 数据模型 | Qdrant collections, document metadata |
+| 工单 | F05, F15a, F15b, F15c |
 
 ### intent — [TBD: filled by F16]
 
-| Aspect | Detail |
-|--------|--------|
-| Package | `app/domain/intent/` |
-| Responsibility | Intent classification and routing: three-layer pipeline (keyword → similarity → LLM), multi-intent detection |
-| Key Files | `service.py`, `schemas.py` |
-| Depends On | `services/llm`, `services/prompt_manager` |
-| API Endpoints | POST /api/v1/intent |
-| Data Model | None (stateless classification) |
-| Work Orders | F16 |
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/intent/` |
+| 职责 | 意图分类与路由：三层管道（关键词 → 相似度 → LLM）、多意图检测 |
+| 关键文件 | `service.py`, `schemas.py` |
+| 依赖 | `services/llm`, `services/prompt_manager` |
+| API 端点 | POST /api/v1/intent |
+| 数据模型 | None（无状态分类） |
+| 工单 | F16 |
 
 ### prompt_admin — [TBD: filled by F08, F17]
 
-| Aspect | Detail |
-|--------|--------|
-| Package | `app/domain/prompt_admin/` |
-| Responsibility | Prompt template query, modify (auto-version + rollback), version history, baseline reset |
-| Key Files | `service.py`, `repo.py`, `schemas.py` |
-| Depends On | `services/prompt_manager` |
-| API Endpoints | Prompt list (with detail), modify, versions history, reset |
-| Data Model | `prompt_templates`, `prompt_template_versions` |
-| Work Orders | F08, F17 |
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/prompt_admin/` |
+| 职责 | 提示词模板查询、修改（自动版本 + 回滚）、版本历史、基线重置 |
+| 关键文件 | `service.py`, `repo.py`, `schemas.py` |
+| 依赖 | `services/prompt_manager` |
+| API 端点 | Prompt list (with detail), modify, versions history, reset |
+| 数据模型 | `prompt_templates`, `prompt_template_versions` |
+| 工单 | F08, F17 |
 
 ### agent_orchestration — [TBD: filled by F11, F12]
 
-| Aspect | Detail |
-|--------|--------|
-| Package | `app/domain/agent_orchestration/` |
-| Responsibility | Business orchestration layer that calls `agent/` engine for task delegation, multi-agent coordination |
-| Key Files | `service.py`, `schemas.py` |
-| Depends On | `agent/` (engine), `services/llm`, `domain/chat` |
-| API Endpoints | POST /api/v1/agent/run, trajectory retrieval |
-| Data Model | `agent_trajectories` |
-| Work Orders | F11, F12 |
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/agent_orchestration/` |
+| 职责 | 业务编排层，调用 `agent/` 引擎进行任务委派、多 Agent 协调 |
+| 关键文件 | `service.py`, `schemas.py` |
+| 依赖 | `agent/` (engine), `services/llm`, `domain/chat` |
+| API 端点 | POST /api/v1/agent/run, trajectory retrieval |
+| 数据模型 | `agent_trajectories` |
+| 工单 | F11, F12 |
 
 ### workflow_orchestration — [TBD: filled by F13]
 
-| Aspect | Detail |
-|--------|--------|
-| Package | `app/domain/workflow_orchestration/` |
-| Responsibility | Business orchestration layer that calls `workflow/` engine for DAG execution |
-| Key Files | `service.py`, `schemas.py` |
-| Depends On | `workflow/` (engine), `domain/knowledge`, `domain/intent` |
-| API Endpoints | POST /api/v1/workflow/run, task status |
-| Data Model | `tasks` |
-| Work Orders | F13 |
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/workflow_orchestration/` |
+| 职责 | 业务编排层，调用 `workflow/` 引擎执行 DAG |
+| 关键文件 | `service.py`, `schemas.py` |
+| 依赖 | `workflow/` (engine), `domain/knowledge`, `domain/intent` |
+| API 端点 | POST /api/v1/workflow/run, task status |
+| 数据模型 | `tasks` |
+| 工单 | F13 |
 
-## Cross-Domain Boundaries
+## 跨域边界
 
-### What domains can call
+### 域可以调用什么
 
-| Caller | Can Call | Cannot Call |
-|--------|----------|-------------|
+| 调用方 | 可以调用 | 不可调用 |
+|--------|----------|----------|
 | `chat` | `services/llm`, `services/context`, `services/sse_stream` | `infra/` directly |
 | `knowledge` | `services/llm`, `infra/vector_store` (via service), `services/prompt_manager` | `agent/`, `workflow/` |
 | `intent` | `services/llm`, `services/prompt_manager` | `infra/` directly |
 | `agent_orchestration` | `agent/` engine, `services/llm`, `domain/chat` | `infra/` directly |
 | `workflow_orchestration` | `workflow/` engine, `domain/knowledge`, `domain/intent` | `infra/` directly |
 
-### Shared services (not owned by any single domain)
+### 共享服务（不属于任何单一域）
 
-| Service | Package | Used By |
-|---------|---------|---------|
-| LLM Gateway | `services/llm/` | All domains |
+| 服务 | 包 | 使用方 |
+|------|------|--------|
+| LLM Gateway | `services/llm/` | 所有域 |
 | SSE Stream | `services/sse_stream/` | `chat`, `knowledge` |
 | Context Manager | `services/context/` | `chat`, `agent` |
-| Prompt Manager | `services/prompt_manager/` | All domains |
+| Prompt Manager | `services/prompt_manager/` | 所有域 |
 | Task Queue | `services/task_queue/` | `workflow_orchestration` |
 
 [TBD: filled by work orders F05, F08, F11–F17]

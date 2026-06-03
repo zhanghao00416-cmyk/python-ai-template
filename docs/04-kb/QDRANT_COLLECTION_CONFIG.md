@@ -1,127 +1,134 @@
-# Qdrant Collection Configuration
+# Qdrant 集合配置
 
-## Overview
+## 概述
 
-This document defines the Qdrant vector store configuration for the knowledge base system. The system supports multiple collections with configurable types, categories, and hybrid search (dense + sparse vectors).
+本文档定义了知识库系统的 Qdrant 向量存储配置。系统支持多集合，具有可配置的类型、类别以及混合检索（稠密 + 稀疏向量）。
 
-## Multi-Collection Architecture — [TBD: filled by F05]
+## 多集合架构 — [TBD: filled by F05]
 
-### Collection Management
+### 集合管理
 
-- Collections are defined in `configs/default.yaml` under `qdrant.collections`
-- On startup, the system auto-creates any missing collections declared in config
-- Collections can be created/deleted dynamically via API
-- Each collection is independent with its own vector configuration
+- 集合在 `configs/default.yaml` 的 `qdrant.collections` 下定义
+- 启动时，系统自动创建配置中声明但尚不存在的集合
+- 可通过 API 动态创建/删除集合
+- 每个集合独立，拥有自己的向量配置
 
-### Default Collections — [TBD: filled by F05]
+### 默认集合 — [TBD: filled by F05]
 
 ```yaml
 qdrant:
   url: http://localhost:6333
   collections:
     - name: "general"
-      description: "General knowledge base"
-      vector_size: 1536
+      description: "通用知识库"
+      vector_dim: 1024
       distance: "Cosine"
       sparse_vectors: true
       payload_indexes:
         - field: "doc_type"
           type: "keyword"
-        - field: "category"
+        - field: "source"
+          type: "keyword"
+        - field: "tag"
+          type: "keyword"
+        - field: "uploader"
           type: "keyword"
         - field: "doc_id"
           type: "keyword"
 
     - name: "safety"
-      description: "Safety and hazard documents"
-      vector_size: 1536
+      description: "安全隐患文档库"
+      vector_dim: 1024
       distance: "Cosine"
       sparse_vectors: true
       payload_indexes:
         - field: "doc_type"
           type: "keyword"
-        - field: "category"
+        - field: "source"
+          type: "keyword"
+        - field: "tag"
+          type: "keyword"
+        - field: "uploader"
           type: "keyword"
         - field: "doc_id"
           type: "keyword"
 ```
 
-## Vector Configuration — [TBD: filled by F05]
+## 向量配置 — [TBD: filled by F05]
 
-### Dense Vectors
+### 稠密向量
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| vector_size | 1536 | Dense embedding dimension |
-| distance | Cosine | Distance metric (Cosine, Euclid, Dot) |
+| 参数 | 默认值 | 说明 |
+|-----------|---------|------|
+| vector_dim | 1024 | 稠密嵌入维度 |
 
-Supported embedding models (configured via LLM Gateway):
+支持的嵌入模型（通过 LLM Gateway 配置）：
 
-| Model | Dimensions | Task Type |
-|-------|-----------|-----------|
-| text-embedding-v3 | 1536 | Text embedding |
-| bge-large-zh-v1.5 | 1024 | Local embedding (vLLM) |
+| 模型 | 维度 | 任务类型 |
+|-------|-----------|----------|
+| text-embedding-v3 | 1024 | 文本嵌入（qwen_cloud，默认） |
+| bge-large-zh-v1.5 | 1024 | 本地嵌入（vLLM 降级） |
 
-### Sparse Vectors — [TBD: filled by F05]
+### 稀疏向量 — [TBD: filled by F05]
 
-Sparse vectors enable keyword-level matching using BM25-style term vectors:
+稀疏向量使用 BM25 风格的词项向量实现关键词级别匹配：
 
-- Enabled per collection via `sparse_vectors: true`
-- Sparse vector field name: `"sparse"`
-- Generated using tokenization + term frequency
-- Used in hybrid retrieval with Reciprocal Rank Fusion (RRF)
+- 每个集合通过 `sparse_vectors: true` 启用
+- 稀疏向量字段名：`"bm25"`（与 `configs/default.yaml` 的 `sparse_vector_name` 一致）
+- 使用分词 + 词频生成
+- 在混合检索中使用倒数排名融合（RRF）
 
-### Hybrid Search — [TBD: filled by F05]
+### 混合检索 — [TBD: filled by F05]
 
 ```
 Query
   ↓
 ┌─────────────┐
-│ Dense Search │  → Top-K dense results (semantic similarity)
+│ Dense Search │  → Top-K 稠密结果（语义相似度）
 └─────────────┘
   ↓
 ┌─────────────┐
-│ Sparse Search│  → Top-K sparse results (keyword match)
+│ Sparse Search│  → Top-K 稀疏结果（关键词匹配）
 └─────────────┘
   ↓
 ┌─────────────┐
-│ RRF Fusion  │  → Merged ranking
+│ RRF Fusion  │  → 合并排序
 └─────────────┘
   ↓
 Final Results
 ```
 
-Reciprocal Rank Fusion formula:
+倒数排名融合公式：
 
 ```
 score(d) = Σ (1 / (k + rank_i(d)))
 where k = 60 (default RRF constant)
 ```
 
-## Payload Schema — [TBD: filled by F05]
+## 负载模式 — [TBD: filled by F05]
 
-Each Qdrant point has the following payload:
+每个 Qdrant 点具有以下负载：
 
 ```python
 class PointPayload:
-    doc_id: str              # Source document identifier
-    collection: str          # Collection name
-    doc_type: str            # Document type (类型)
-    source: str              # Document origin (来源)
-    tag: str                 # Document tag (标签)
-    uploader: str            # Uploader identifier
-    heading: str             # Section heading
-    heading_level: int        # H1=1, H2=2, etc.
-    source_file: str          # Original markdown filename
-    chunk_index: int          # Chunk position in document
-    text: str                 # Chunk text content
-    is_parent: bool           # True = parent chunk, False = child chunk
-    parent_id: str | None     # Child chunk: points to parent chunk ID; Parent chunk: None
+    doc_id: str              # 来源文档标识符
+    collection: str          # 集合名称
+    doc_type: str            # 文档类型 (类型)
+    source: str              # 文档来源 (来源)
+    tag: str                 # 文档标签 (标签)
+    uploader: str            # 上传者标识符
+    heading: str             # 章节标题
+    heading_level: int        # H1=1, H2=2, 等
+    source_file: str          # 原始 Markdown 文件名
+    chunk_index: int          # 文档中的分块位置
+    text: str                 # 分块文本内容
+    is_parent: bool           # True = 父分块, False = 子分块
+    parent_id: str | None     # 子分块：指向父分块 ID；父分块：None
 ```
 
-### Configurable Dimensions — [TBD: filled by F15a]
+### 可配置维度 — [TBD: filled by F15a]
 
-`doc_type` and `category` are configurable dimensions, not hardcoded:
+`doc_type`、`source` 和 `tag` 是可配置维度，不在代码中硬编码：
 
 ```yaml
 qdrant:
@@ -134,29 +141,29 @@ qdrant:
       values: ["重要", "已审核", "草稿"]
 ```
 
-These dimensions are used for:
-- Payload indexes in Qdrant (for filtering)
-- RAG query filters (pass `doc_type` and `category` as filter criteria)
+这些维度用于：
+- Qdrant 中的负载索引（用于过滤）
+- RAG 查询过滤器（将 `doc_type`、`source`、`tag` 作为过滤条件传入）
 
-## Payload Indexes — [TBD: filled by F05]
+## 负载索引 — [TBD: filled by F05]
 
-Payload indexes are created for all filterable fields:
+为所有可过滤字段创建负载索引：
 
-| Field | Index Type | Purpose |
-|-------|-----------|---------|
-| `doc_type` | keyword | Filter by document type (类型) |
-| `source` | keyword | Filter by document origin (来源) |
-| `tag` | keyword | Filter by document tag (标签) |
-| `uploader` | keyword | Filter by uploader |
-| `doc_id` | keyword | Filter by source document |
-| `is_parent` | keyword | Filter by parent/child chunk type |
-| `parent_id` | keyword | Lookup parent chunk from child chunk |
+| 字段 | 索引类型 | 用途 |
+|-------|-----------|------|
+| `doc_type` | keyword | 按文档类型过滤 (类型) |
+| `source` | keyword | 按文档来源过滤 (来源) |
+| `tag` | keyword | 按文档标签过滤 (标签) |
+| `uploader` | keyword | 按上传者过滤 |
+| `doc_id` | keyword | 按来源文档过滤 |
+| `is_parent` | keyword | 按父/子分块类型过滤 |
+| `parent_id` | keyword | 从子分块查找父分块 |
 
-Additional indexes can be configured per collection in `configs/default.yaml`.
+可在 `configs/default.yaml` 中为每个集合配置额外的索引。
 
-## Collection Lifecycle — [TBD: filled by F05]
+## 集合生命周期 — [TBD: filled by F05]
 
-### Auto-Creation on Startup
+### 启动时自动创建
 
 ```python
 async def ensure_collections():
@@ -170,97 +177,97 @@ async def ensure_collections():
     """
 ```
 
-### Dynamic Creation via API
+### 通过 API 动态创建
 
 ```python
 POST /api/v1/kb/collections
 {
   "name": "custom_collection",
   "description": "Custom knowledge collection",
-  "vector_size": 1536,
+  "vector_dim": 1024,
   "distance": "Cosine",
   "sparse_vectors": true
 }
 ```
 
-### Deletion
+### 删除
 
 ```python
 DELETE /api/v1/kb/collections/{collection_name}
 → Deletes collection and all its points (irreversible)
 ```
 
-## Document Operations — [TBD: filled by F15a/F15b]
+## 文档操作 — [TBD: filled by F15a/F15b]
 
-### Upload Document
+### 上传文档
 
 ```python
 POST /api/v1/kb/collections/{collection_name}/documents
 Content-Type: multipart/form-data
 
 file: <markdown file>
-doc_type: "技术文档"             # Metadata: 类型
-source: "内部"                   # Metadata: 来源
-tag: "已审核"                    # Metadata: 标签
-uploader: "user1"                # Uploader identifier
-chunking_strategy: "fixed_overlap"  # Optional: chunking strategy
-# chunking_params: {...}         # Optional: strategy-specific parameters
+doc_type: "技术文档"             # 元数据：类型
+source: "内部"                   # 元数据：来源
+tag: "已审核"                    # 元数据：标签
+uploader: "user1"                # 上传者标识符
+chunking_strategy: "fixed_overlap"  # 可选：分块策略
+# chunking_params: {...}         # 可选：策略特定参数
 ```
 
-Pipeline:
-1. Parse markdown into chunks (using configured chunking strategy)
-2. If `enable_parent_child=true`:
-   a. Create parent chunks using `fixed_overlap` strategy with `parent_chunk_params`
-   b. Create child chunks using selected `chunking_strategy`
-   c. Link each child chunk to its parent via `parent_id`
-3. Generate dense embeddings via LLM Gateway
-4. Generate sparse vectors (tokenization)
-5. Upsert points to Qdrant with metadata
-6. Returns task_id (async processing)
+处理流程：
+1. 将 Markdown 解析为分块（使用配置的分块策略）
+2. 如果 `enable_parent_child=true`：
+   a. 使用 `fixed_overlap` 策略和 `parent_chunk_params` 创建父分块
+   b. 使用选定的 `chunking_strategy` 创建子分块
+   c. 通过 `parent_id` 将每个子分块链接到其父分块
+3. 通过 LLM Gateway 生成稠密嵌入
+4. 生成稀疏向量（分词）
+5. 将带元数据的点插入 Qdrant
+6. 返回 task_id（异步处理）
 
-### Parent-Child Chunking Mode
+### 父子分块模式
 
-When `enable_parent_child=true`, documents are chunked at two granularities:
+当 `enable_parent_child=true` 时，文档以两种粒度进行分块：
 
-- **Parent chunks**: Large-granularity (default 2000 chars), provide full context
-- **Child chunks**: Fine-granularity (per selected strategy), for precise matching
+- **父分块**：粗粒度（默认 2000 字符），提供完整上下文
+- **子分块**：细粒度（按选定策略），用于精确匹配
 
-Retrieval behavior: match child chunk → look up `parent_id` → return parent chunk content with child chunk position info.
+检索行为：匹配子分块 → 查找 `parent_id` → 返回父分块内容及子分块位置信息。
 
-Deduplication: if filename + uploader + collection already exists, return HTTP 409.
+去重：如果文件名 + 上传者 + 集合已存在，返回 HTTP 409。
 
-### List/Search Documents
+### 列出/搜索文档
 
 ```python
 GET /api/v1/kb/collections/{collection_name}/documents?filename=guide&doc_type=技术文档&source=内部&tag=已审核&uploader=user1&limit=20&offset=0
 ```
 
-### Delete Documents
+### 删除文档
 
 ```python
-# Two-step confirmation:
-# Step 1: Without confirm_token → returns impact scope + confirm_token
+# 两步确认：
+# 第 1 步：不带 confirm_token → 返回影响范围 + confirm_token
 DELETE /api/v1/kb/collections/{collection_name}/documents?clear_all=true
 → { "affected_documents_count": 42, "confirm_token": "uuid" }
 
-# Step 2: With confirm_token → executes deletion
+# 第 2 步：带 confirm_token → 执行删除
 DELETE /api/v1/kb/collections/{collection_name}/documents?clear_all=true&confirm_token=uuid
 → { "deleted_documents_count": 42 }
 ```
 
-Also supports targeted deletion via query params: `doc_id`, `doc_type`, `source`, `tag`, `uploader`, `filename`.
+也支持通过查询参数定向删除：`doc_id`、`doc_type`、`source`、`tag`、`uploader`、`filename`。
 
-### Query (RAG)
+### 查询 (RAG)
 
 ```python
 POST /api/v1/kb/query
 {
   "query": "How to handle chemical spills?",
-  "collection_names": ["safety"],  # Optional, defaults to all collections
-  "doc_type": "regulation",        # Optional filter
-  "source": "内部",                # Optional filter
-  "tag": "已审核",                 # Optional filter
-  "uploader": "user1",            # Optional filter
+  "collection_names": ["safety"],  # 可选，默认为所有集合
+  "doc_type": "regulation",        # 可选过滤器
+  "source": "内部",                # 可选过滤器
+  "tag": "已审核",                 # 可选过滤器
+  "uploader": "user1",            # 可选过滤器
   "retrieval_strategy": "hybrid", # keyword/similarity/hybrid/rrf
   "top_k": 5,
   "score_threshold": 0.5,
@@ -269,18 +276,20 @@ POST /api/v1/kb/query
 }
 ```
 
-## Error Codes — [TBD: filled by F05, F15a/F15b]
+## 错误码 — [TBD: filled by F05, F15a/F15b]
 
-| Code | Name | Description |
-|------|------|-------------|
-| 6001 | KB_COLLECTION_EXISTS | Collection already exists |
-| 6002 | KB_COLLECTION_CREATE_FAILED | Failed to create collection |
-| 6003 | KB_COLLECTION_DELETE_FAILED | Failed to delete collection |
-| 6004 | KB_DOCUMENT_UPLOAD_FAILED | Document parsing or indexing failed |
-| 6005 | KB_DOCUMENT_DELETE_FAILED | Document deletion failed |
-| 6006 | KB_INVALID_DOCUMENT_TYPE | Only markdown documents are supported |
+| 代码 | 名称 | 说明 |
+|------|------|------|
+| 6001 | KB_UPLOAD_FAILED | 文件上传失败 |
+| 6002 | KB_FILENAME_EXISTS | 文件名已存在 |
+| 6003 | KB_FILE_NOT_FOUND | 文件未找到 |
+| 6004 | KB_FORMAT_UNSUPPORTED | 不支持的文件格式（仅支持 markdown） |
+| 6005 | KB_VECTOR_WRITE_FAILED | 向量写入失败 |
+| 6006 | KB_CHUNK_LIMIT_EXCEEDED | 分块数量超过 max_chunks 限制 |
 
-## Qdrant Client Configuration — [TBD: filled by F05]
+> 6xxx 错误码以 `docs/01-architecture/ERROR_CODE.md` 为权威来源，本表与其保持一致。
+
+## Qdrant 客户端配置 — [TBD: filled by F05]
 
 ```python
 # app/infra/vector_store/qdrant_client.py
@@ -295,6 +304,6 @@ class QdrantClientWrapper:
     async def delete_points(self, collection: str, point_ids: list[str]) -> None: ...
 ```
 
-All Qdrant operations go through this wrapper, never directly via the SDK in domain code.
+所有 Qdrant 操作均通过此包装器进行，域代码中绝不直接使用 SDK。
 
 [TBD: filled by work orders F05, F15a/F15b/F15c]

@@ -1,10 +1,10 @@
-# RAG Pipeline Specification
+# RAG 流水线规范
 
-## Overview
+## 概述
 
-The RAG (Retrieval-Augmented Generation) pipeline handles knowledge base document ingestion, vector indexing, and retrieval-augmented question answering. The pipeline spans the `domain/knowledge/` and `infra/vector_store/` layers.
+RAG（检索增强生成）流水线负责知识库文档摄入、向量索引和检索增强问答。该流水线跨越 `domain/knowledge/` 和 `infra/vector_store/` 层。
 
-## Pipeline Architecture — [TBD: filled by F15a/F15b]
+## 流水线架构 — [TBD: filled by F15a/F15b]
 
 ```
 User Query
@@ -26,9 +26,9 @@ Intent Classification (→ RAG intent)
 RAG Response (answer + citations)
 ```
 
-## Document Ingestion — [TBD: filled by F15a]
+## 文档摄入 — [TBD: filled by F15a]
 
-### Pipeline Flow
+### 流水线流程
 
 ```
 Upload Markdown Document
@@ -37,33 +37,33 @@ Parse into chunks (heading-aware splitting)
     ↓
 Generate embeddings (via LLM Gateway)
     ↓
-Store in Qdrant (with metadata: collection, type, category, doc_id)
+Store in Qdrant (with metadata: collection, doc_type, source, tag, uploader, doc_id)
     ↓
 Return document ID
 ```
 
-### Chunking Strategy — [TBD: filled by F15a]
+### 分块策略 — [TBD: filled by F15a]
 
-- Only Markdown documents are supported
-- 4 configurable chunking strategies:
+- 仅支持 Markdown 文档
+- 4 种可配置分块策略：
 
-| Strategy | Key | Parameters |
-|----------|-----|------------|
-| Fixed + overlap | `fixed_overlap` | `chunk_size` (default 500), `overlap` (default 50) |
-| Delimiter + max length | `delimiter_max` | `delimiters` (default ["\n\n", "\n"]), `max_chunk_size` (default 1000) |
-| Semantic | `semantic` | `similarity_threshold` (default 0.85) |
-| Paragraph | `paragraph` | `min_paragraph_chars` (default 50) |
+| 策略 | 键名 | 参数 |
+|------|------|------|
+| 固定长度 + 重叠 | `fixed_overlap` | `chunk_size`（默认 500），`overlap`（默认 50） |
+| 分隔符 + 最大长度 | `delimiter_max` | `delimiters`（默认 ["\n\n", "\n"]），`max_chunk_size`（默认 1000） |
+| 语义分块 | `semantic` | `similarity_threshold`（默认 0.85） |
+| 段落分块 | `paragraph` | `min_paragraph_chars`（默认 50） |
 
-### Parent-Child Chunking Mode — [TBD: filled by F15a]
+### 父子分块模式 — [TBD: filled by F15a]
 
-All 4 chunking strategies support an optional parent-child mode via `enable_parent_child=true`:
+所有 4 种分块策略均支持通过 `enable_parent_child=true` 启用可选的父子模式：
 
-- **Child chunks**: Fine-granularity chunks for precise matching (uses selected `chunking_strategy`)
-- **Parent chunks**: Large-granularity chunks for full context (always uses `fixed_overlap` with `parent_chunk_params`)
+- **子分块**：细粒度分块，用于精确匹配（使用所选 `chunking_strategy`）
+- **父分块**：粗粒度分块，提供完整上下文（始终使用 `fixed_overlap` 配合 `parent_chunk_params`）
 
-Each child chunk stores `parent_id` linking to its parent chunk. During retrieval, matching a child chunk automatically returns the parent chunk content.
+每个子分块存储 `parent_id` 指向其父分块。检索时，匹配到子分块会自动返回父分块内容。
 
-### Chunk Metadata — [TBD: filled by F15a]
+### 分块元数据 — [TBD: filled by F15a]
 
 ```python
 class ChunkMetadata:
@@ -81,9 +81,9 @@ class ChunkMetadata:
     parent_id: str | None    # Child: points to parent chunk ID; Parent: None
 ```
 
-## Vector Retrieval — [TBD: filled by F05, F15b]
+## 向量检索 — [TBD: filled by F05, F15b]
 
-### Query Flow
+### 查询流程
 
 ```
 User Query Text
@@ -95,9 +95,9 @@ Search Qdrant (with filters)
 Return top-K chunks with scores
 ```
 
-### Filtering — [TBD: filled by F15b]
+### 过滤 — [TBD: filled by F15b]
 
-Qdrant queries support multi-dimensional filtering:
+Qdrant 查询支持多维过滤：
 
 ```python
 class RetrievalFilter:
@@ -110,28 +110,28 @@ class RetrievalFilter:
     limit: int = 5                 # Max number of results
 ```
 
-### Retrieval Strategies — [TBD: filled by F15b]
+### 检索策略 — [TBD: filled by F15b]
 
-| Strategy | Key | Description |
-|----------|-----|-------------|
-| Keyword | `keyword` | Sparse vector / full-text search |
-| Similarity | `similarity` | Dense vector search |
-| Hybrid | `hybrid` | Combine keyword + similarity (default) |
-| RRF | `rrf` | Reciprocal Rank Fusion |
+| 策略 | 键名 | 描述 |
+|------|------|------|
+| 关键词 | `keyword` | 稀疏向量 / 全文搜索 |
+| 相似度 | `similarity` | 稠密向量搜索 |
+| 混合 | `hybrid` | 关键词 + 相似度组合（默认） |
+| RRF | `rrf` | 倒数排名融合 |
 
-Reranking can be optionally enabled via `enable_rerank` parameter.
+可通过 `enable_rerank` 参数可选启用重排序。
 
-### Hybrid Search — [TBD: filled by F05]
+### 混合搜索 — [TBD: filled by F05]
 
-Support both dense (semantic) and sparse (keyword) vector retrieval:
+同时支持稠密（语义）和稀疏（关键词）向量检索：
 
-- Dense: embedding model generates dense vectors
-- Sparse: BM25/sparse vectors for keyword matching
-- Results are fused using Reciprocal Rank Fusion (RRF)
+- 稠密：嵌入模型生成稠密向量
+- 稀疏：BM25/稀疏向量进行关键词匹配
+- 结果通过倒数排名融合（RRF）合并
 
-## Context Assembly — [TBD: filled by F15b]
+## 上下文组装 — [TBD: filled by F15b]
 
-After retrieval, context is assembled for the LLM:
+检索后，为 LLM 组装上下文：
 
 ```python
 class RAGContext:
@@ -141,13 +141,13 @@ class RAGContext:
     max_context_tokens: int        # Token budget for context
 ```
 
-1. Format each chunk with source citation markers
-2. Truncate if total context exceeds token budget
-3. Inject into prompt template with `{context}` and `{question}` variables
+1. 格式化每个分块并附来源引用标记
+2. 若总上下文超出 token 预算则截断
+3. 注入到包含 `{context}` 和 `{question}` 变量的提示模板中
 
-## Prompt Construction — [TBD: filled by F15b]
+## 提示构造 — [TBD: filled by F15b]
 
-RAG prompt templates are loaded from `prompts/rag/`:
+RAG 提示模板从 `prompts/rag/` 加载：
 
 ```markdown
 # prompts/rag/system.md
@@ -163,16 +163,16 @@ Always cite your sources using [citation:N] format.
 {question}
 ```
 
-Templates are loaded by `services/prompt_manager/` and rendered with variable substitution.
+模板由 `services/prompt_manager/` 加载并通过变量替换渲染。
 
-## LLM Generation — [TBD: filled by F15b]
+## LLM 生成 — [TBD: filled by F15b]
 
-- Uses LLM Gateway with `task_type="rag_merge"`
-- Supports both streaming and non-streaming responses
-- Token usage is tracked and logged
-- Concurrency controlled by LLM semaphore
+- 使用 LLM Gateway，`task_type="rag_merge"`
+- 支持流式和非流式响应
+- Token 用量被跟踪和记录
+- 并发由 LLM 信号量控制
 
-## Citation Extraction — [TBD: filled by F15b]
+## 引用提取 — [TBD: filled by F15b]
 
 ```python
 class Citation:
@@ -184,29 +184,29 @@ class Citation:
     text_snippet: str   # Relevant text excerpt
 ```
 
-Citations are extracted from the LLM response and matched back to retrieved chunks.
+引用从 LLM 响应中提取并匹配回已检索的分块。
 
-## API Integration — [TBD: filled by F15a/F15b]
+## API 集成 — [TBD: filled by F15a/F15b]
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| /api/v1/kb/collections | POST | Create collection |
-| /api/v1/kb/collections | GET | List collections |
-| /api/v1/kb/collections/{name} | DELETE | Delete collection |
-| /api/v1/kb/collections/{name}/documents | POST | Upload document (multipart, async) |
-| /api/v1/kb/collections/{name}/documents | GET | List/search documents |
-| /api/v1/kb/collections/{name}/documents | DELETE | Delete documents (batch/clear with confirm_token) |
-| /api/v1/kb/query | POST | RAG query with configurable retrieval |
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| /api/v1/kb/collections | POST | 创建集合 |
+| /api/v1/kb/collections | GET | 列出集合 |
+| /api/v1/kb/collections/{name} | DELETE | 删除集合 |
+| /api/v1/kb/collections/{name}/documents | POST | 上传文档（多部分表单，异步） |
+| /api/v1/kb/collections/{name}/documents | GET | 列出/搜索文档 |
+| /api/v1/kb/collections/{name}/documents | DELETE | 删除文档（批量/清空需 confirm_token） |
+| /api/v1/kb/query | POST | RAG 查询，可配置检索策略 |
 
-## Error Codes — [TBD: filled by F15b]
+## 错误码 — [TBD: filled by F15b]
 
-| Code | Name | Description |
-|------|------|-------------|
-| 3001 | RAG_COLLECTION_NOT_FOUND | Collection does not exist |
-| 3002 | RAG_RETRIEVAL_FAILED | Vector retrieval query failed |
-| 3003 | RAG_NO_RESULTS | No relevant documents found |
-| 3004 | RAG_GENERATION_FAILED | LLM answer generation failed |
-| 3005 | RAG_INDEXING_FAILED | Document indexing failed |
-| 3006 | RAG_DOCUMENT_NOT_FOUND | Document does not exist |
+| 错误码 | 名称 | 描述 |
+|--------|------|------|
+| 3001 | RAG_COLLECTION_NOT_FOUND | 集合不存在 |
+| 3002 | RAG_RETRIEVAL_FAILED | 向量检索查询失败 |
+| 3003 | RAG_NO_RESULTS | 未找到相关文档 |
+| 3004 | RAG_GENERATION_FAILED | LLM 回答生成失败 |
+| 3005 | RAG_INDEXING_FAILED | 文档索引失败 |
+| 3006 | RAG_DOCUMENT_NOT_FOUND | 文档不存在 |
 
 [TBD: filled by work orders F05, F15a/F15b]

@@ -1,26 +1,26 @@
-# LLM Gateway Specification
+# LLM 网关规范
 
-## Overview
+## 概述
 
-The LLM Gateway (`app/services/llm/`) provides a unified call pipeline for all LLM interactions. It uses the Strategy Pattern to abstract provider switching, enforces concurrency control via semaphores, and integrates with the observability layer for token tracking and latency logging.
+LLM 网关（`app/services/llm/`）为所有 LLM 交互提供统一的调用管道。它使用策略模式抽象提供者切换，通过信号量实施并发控制，并集成可观测层用于令牌追踪和延迟日志记录。
 
-## Architecture — [TBD: filled by F04]
+## 架构 — [TBD: filled by F04]
 
 ```
-Caller (domain/service)
-       ↓
-   LLMGateway (unified interface)
-       ↓
-   LLMRouter (strategy selection by config)
-       ↓
-   ProviderAdapter (qwen_cloud | vllm | ...)
-       ↓
-   External API (Qwen Cloud / vLLM server)
+调用方 (domain/service)
+        ↓
+    LLMGateway (统一接口)
+        ↓
+    LLMRouter (按配置选择策略)
+        ↓
+    ProviderAdapter (qwen_cloud | vllm | ...)
+        ↓
+    外部 API (Qwen Cloud / vLLM server)
 ```
 
-## Strategy Pattern — [TBD: filled by F04]
+## 策略模式 — [TBD: filled by F04]
 
-### Base Strategy
+### 基础策略
 
 ```python
 class LLMProvider(ABC):
@@ -33,15 +33,15 @@ class LLMProvider(ABC):
         """Streaming generation yielding chunks."""
 ```
 
-### Provider Adapters — [TBD: filled by F04]
+### 提供者适配器 — [TBD: filled by F04]
 
-| Adapter | Task Type | Default Channel | Fallback |
-|---------|-----------|----------------|----------|
-| QwenCloudProvider | Text | qwen_cloud API | vLLM |
-| VLLMProvider | Text | Local vLLM server | None |
-| MultimodalProvider | Vision/Video | Config-specified | None |
+| 适配器 | 任务类型 | 默认通道 | 降级通道 |
+|--------|----------|----------|----------|
+| QwenCloudProvider | 文本 | qwen_cloud API | vLLM |
+| VLLMProvider | 文本 | 本地 vLLM 服务 | 无 |
+| MultimodalProvider | 多模态 | 配置指定 | 无 |
 
-### Routing Logic — [TBD: filled by F04]
+### 路由逻辑 — [TBD: filled by F04]
 
 ```python
 class LLMRouter:
@@ -54,25 +54,25 @@ class LLMRouter:
         """
 ```
 
-## Unified Call Pipeline — [TBD: filled by F04]
+## 统一调用管道 — [TBD: filled by F04]
 
-Every LLM call goes through:
+每次 LLM 调用都经过：
 
-1. **Pre-processing**: Inject system prompt, validate parameters
-2. **Concurrency control**: Acquire semaphore permit (configurable concurrency limit)
-3. **Timeout**: Enforce per-request timeout
-4. **Provider call**: Delegate to selected adapter
-5. **Post-processing**: Normalize response format
-6. **Observability**: Log token usage, latency, success/failure
-7. **Error handling**: Wrap provider errors into structured `AI_xxxx` error codes
+1. **预处理**：注入系统提示词，校验参数
+2. **并发控制**：获取信号量许可（可配置并发上限）
+3. **超时**：强制执行单请求超时
+4. **提供者调用**：委托至选定的适配器
+5. **后处理**：标准化响应格式
+6. **可观测性**：记录令牌用量、延迟、成功/失败
+7. **错误处理**：将提供者错误包装为结构化 `AI_xxxx` 错误码
 
-## Request/Response Models — [TBD: filled by F04]
+## 请求/响应模型 — [TBD: filled by F04]
 
 ```python
 class LLMRequest:
     messages: list[Message]
     model: str | None         # Override model selection
-    task_type: str            # "text" | "vision" | "video_analysis" | "embedding"
+    task_type: str            # "text" | "multimodal" | "embedding"
     temperature: float = 0.7
     max_tokens: int = 4096
     stream: bool = False
@@ -88,7 +88,7 @@ class LLMResponse:
     metadata: dict
 ```
 
-## Streaming Protocol — [TBD: filled by F04]
+## 流式协议 — [TBD: filled by F04]
 
 ```python
 class LLMChunk:
@@ -98,9 +98,9 @@ class LLMChunk:
     output_tokens: int | None # Available on last chunk
 ```
 
-## Concurrency Control — [TBD: filled by F04]
+## 并发控制 — [TBD: filled by F04]
 
-AI inference is resource-heavy. All LLM calls must be wrapped in semaphore protection:
+AI 推理属于资源密集型操作。所有 LLM 调用必须包裹在信号量保护中：
 
 ```python
 llm_semaphore = asyncio.Semaphore(config.LLM_MAX_CONCURRENT)
@@ -110,30 +110,30 @@ async def generate(self, request):
         # ... provider call ...
 ```
 
-No unlimited async fanout is permitted.
+不允许无限制的异步扇出。
 
-## Error Handling — [TBD: filled by F04]
+## 错误处理 — [TBD: filled by F04]
 
-| Provider Error | Mapped Code | Action |
-|----------------|-------------|--------|
-| Connection timeout | `0004 TIMEOUT_ERROR` | Retry with fallback |
-| Rate limit (429) | `0006 RATE_LIMITED` | Backoff and retry |
-| Auth failure (401/403) | `1001 AUTH_INVALID_KEY` | Fail immediately |
-| Model not found | `0003 SERVICE_UNAVAILABLE` | Retry with fallback |
-| Invalid request | `0005 VALIDATION_ERROR` | Fail immediately |
+| 提供者错误 | 映射错误码 | 处理动作 |
+|-----------|-----------|---------|
+| 连接超时 | `0004 TIMEOUT_ERROR` | 使用降级通道重试 |
+| 速率限制 (429) | `0006 RATE_LIMITED` | 退避后重试 |
+| 认证失败 (401/403) | `1001 AUTH_INVALID_KEY` | 立即失败 |
+| 模型未找到 | `0003 SERVICE_UNAVAILABLE` | 使用降级通道重试 |
+| 无效请求 | `0005 VALIDATION_ERROR` | 立即失败 |
 
-## Token Tracking — [TBD: filled by F18]
+## 令牌追踪 — [TBD: filled by F18]
 
-Every call records:
-- `input_tokens`, `output_tokens`
-- `model`, `task_type`
-- `user_id`, `session_id`
+每次调用记录：
+- `input_tokens`、`output_tokens`
+- `model`、`task_type`
+- `user_id`、`session_id`
 - `latency_ms`
-- Success/failure
+- 成功/失败
 
-Exposed via `/metrics` endpoint in Prometheus format.
+通过 `/metrics` 端点以 Prometheus 格式暴露。
 
-## Configuration — [TBD: filled by F04]
+## 配置 — [TBD: filled by F04]
 
 ```yaml
 llm:

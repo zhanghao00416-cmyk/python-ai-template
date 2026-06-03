@@ -69,6 +69,7 @@ phases:
         dependencies: [F01, F03]
         docs:
           - "docs/02-engineering/LLM_GATEWAY_SPEC.md"
+          - "docs/01-architecture/ERROR_CODE.md"
 
       - id: F05
         name: "向量库抽象 + Qdrant 适配"
@@ -158,6 +159,7 @@ phases:
         dependencies: [F06, F09, F04]
         docs:
           - "docs/03-ai/CHAT_WORKFLOW_SPEC.md"
+          - "docs/01-architecture/API_CONTRACT.md"
 
       - id: F15a
         name: "知识库集合+文档管理（4种分块+父子模式+3元数据+清库确认）"
@@ -192,6 +194,7 @@ phases:
         dependencies: [F04, F08]
         docs:
           - "docs/03-ai/INTENT_ROUTING_SPEC.md"
+          - "docs/01-architecture/API_CONTRACT.md"
 
       - id: F17
         name: "Prompt 管理 API（查询+修改+版本历史+重置）"

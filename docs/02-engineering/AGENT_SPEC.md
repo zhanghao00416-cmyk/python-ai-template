@@ -1,12 +1,12 @@
-# Agent Engine Specification
+# Agent 引擎规格
 
-## Overview
+## 概述
 
-The Agent engine (`app/agent/`) is an independent execution engine separate from business domains. It provides state-machine-based agent lifecycle, ReAct (Reason-Act) loop execution, and multi-agent collaboration strategies. Domain layers orchestrate agent execution; agents never access the database directly.
+Agent 引擎（`app/agent/`）是独立于业务领域的执行引擎。它提供基于状态机的 Agent 生命周期、ReAct（推理-行动）循环执行以及多 Agent 协作策略。领域层编排 Agent 执行；Agent 永不直接访问数据库。
 
-## State Machine — [TBD: filled by F11]
+## 状态机 — [TBD: filled by F11]
 
-### Agent States
+### Agent 状态
 
 ```
 IDLE ──→ THINKING ──→ ACTING ──→ OBSERVING ──→ DONE
@@ -14,47 +14,47 @@ IDLE ──→ THINKING ──→ ACTING ──→ OBSERVING ──→ DONE
   └──────────┴────────────┴───────────┘──→ ERROR
 ```
 
-| State | Description |
-|-------|-------------|
-| IDLE | Agent initialized, awaiting first input |
-| THINKING | Agent reasoning about next action (LLM call) |
-| ACTING | Agent executing a tool call |
-| OBSERVING | Agent processing tool result |
-| DONE | Agent has produced final answer |
-| ERROR | Agent encountered unrecoverable error |
+| 状态 | 描述 |
+|------|------|
+| IDLE | Agent 已初始化，等待首次输入 |
+| THINKING | Agent 正在推理下一步行动（LLM 调用） |
+| ACTING | Agent 正在执行工具调用 |
+| OBSERVING | Agent 正在处理工具结果 |
+| DONE | Agent 已生成最终回答 |
+| ERROR | Agent 遇到不可恢复的错误 |
 
-### State Transition Rules — [TBD: filled by F11]
+### 状态转换规则 — [TBD: filled by F11]
 
-| From | To | Trigger |
-|------|----|---------|
-| IDLE | THINKING | User input received |
-| THINKING | ACTING | LLM decides to call a tool |
-| THINKING | DONE | LLM produces final answer |
-| ACTING | OBSERVING | Tool call completed |
-| OBSERVING | THINKING | Observation fed back to LLM |
-| Any | ERROR | Unrecoverable exception |
-| Any | IDLE | Reset triggered |
+| 从 | 到 | 触发条件 |
+|----|----|----------|
+| IDLE | THINKING | 收到用户输入 |
+| THINKING | ACTING | LLM 决定调用工具 |
+| THINKING | DONE | LLM 生成最终回答 |
+| ACTING | OBSERVING | 工具调用完成 |
+| OBSERVING | THINKING | 观察结果反馈给 LLM |
+| 任意 | ERROR | 不可恢复异常 |
+| 任意 | IDLE | 触发重置 |
 
-## ReAct Loop — [TBD: filled by F11]
+## ReAct 循环 — [TBD: filled by F11]
 
-### Execution Cycle
+### 执行周期
 
 ```
-1. Receive user input (or previous observation)
-2. THINKING: LLM generates reasoning + action plan
-3. If action = tool_call:
-   a. ACTING: Execute tool via registry
-   b. OBSERVING: Record tool result
-   c. Go to step 2 with observation appended
-4. If action = final_answer:
-   a. DONE: Return answer to caller
-5. If max_iterations reached:
-   a. DONE (with truncation notice)
+1. 接收用户输入（或上一步观察结果）
+2. THINKING：LLM 生成推理 + 行动计划
+3. 若 action = tool_call：
+   a. ACTING：通过注册表执行工具
+   b. OBSERVING：记录工具结果
+   c. 将观察结果追加后回到步骤 2
+4. 若 action = final_answer：
+   a. DONE：将回答返回给调用方
+5. 若达到 max_iterations：
+   a. DONE（附带截断通知）
 ```
 
-### Trajectory Recording — [TBD: filled by F11]
+### 轨迹记录 — [TBD: filled by F11]
 
-Every step records a `TrajectoryEntry`:
+每一步记录一个 `TrajectoryEntry`：
 
 ```python
 class TrajectoryEntry:
@@ -68,25 +68,25 @@ class TrajectoryEntry:
     timestamp: datetime
 ```
 
-Trajectories are stored via `domain/repo` (agent never writes to DB directly).
+轨迹通过 `domain/repo` 存储（Agent 永不直接写入数据库）。
 
-### Prompt Template — [TBD: filled by F11]
+### Prompt 模板 — [TBD: filled by F11]
 
-The ReAct prompt follows a structured format loaded from `prompts/agent/react_template.md`:
+ReAct prompt 遵循从 `prompts/agent/react_template.md` 加载的结构化格式：
 
 ```
-System: [role description]
-Available tools: [tool list with signatures]
+System: [角色描述]
+Available tools: [带签名的工具列表]
 
-Thought: <reasoning>
+Thought: <推理过程>
 Action: <tool_name>(<args>)
 Observation: <tool_result>
-... (repeat)
-Thought: <final reasoning>
-Final Answer: <answer>
+... (重复)
+Thought: <最终推理>
+Final Answer: <回答>
 ```
 
-## Agent Base Class — [TBD: filled by F11]
+## Agent 基类 — [TBD: filled by F11]
 
 ```python
 class BaseAgent(ABC):
@@ -112,9 +112,9 @@ class BaseAgent(ABC):
         """Check iteration limit and state."""
 ```
 
-## Multi-Agent Collaboration — [TBD: filled by F12]
+## 多 Agent 协作 — [TBD: filled by F12]
 
-### Orchestrator Pattern
+### 编排者模式
 
 ```python
 class OrchestratorAgent(BaseAgent):
@@ -132,7 +132,7 @@ class OrchestratorAgent(BaseAgent):
     async def synthesize(self, results: list[AgentResult]) -> str
 ```
 
-### Debate Strategy — [TBD: filled by F12]
+### 辩论策略 — [TBD: filled by F12]
 
 ```python
 class DebateStrategy:
@@ -148,16 +148,16 @@ class DebateStrategy:
     consensus_threshold: float = 0.8
 ```
 
-### Sub-Agent Communication — [TBD: filled by F12]
+### 子 Agent 通信 — [TBD: filled by F12]
 
-- Sub-agents communicate through the orchestrator (no direct agent-to-agent)
-- Shared context is maintained in the orchestrator
-- Each sub-agent has its own trajectory record
-- Results are aggregated in the orchestrator's final answer
+- 子 Agent 通过编排者通信（不直接 Agent 之间通信）
+- 共享上下文由编排者维护
+- 每个子 Agent 拥有独立的轨迹记录
+- 结果在编排者的最终回答中聚合
 
-## Tool Integration — [TBD: filled by F11]
+## 工具集成 — [TBD: filled by F11]
 
-Agents use tools through the `tools/registry`:
+Agent 通过 `tools/registry` 使用工具：
 
 ```python
 # Agent declares needed tools
@@ -168,22 +168,22 @@ class MyAgent(BaseAgent):
 result = await tool_registry.call("knowledge_search", query="...")
 ```
 
-Agents never implement tool logic — they only invoke registered tools.
+Agent 永不实现工具逻辑——仅调用已注册的工具。
 
-## Error Handling — [TBD: filled by F11]
+## 错误处理 — [TBD: filled by F11]
 
-| Scenario | Error Code | Behavior |
-|----------|-----------|----------|
-| Invalid state transition | `7001 AGENT_STATE_INVALID` | Log and reset to IDLE |
-| Tool not found | `7002 AGENT_TOOL_NOT_FOUND` | Report to LLM, continue ReAct |
-| LLM call fails | `0004 TIMEOUT_ERROR` | Retry or abort |
-| Max iterations | `7004 AGENT_MAX_ITERATIONS` | Return partial result |
-| Unrecoverable failure | `7003 AGENT_EXECUTION_FAILED` | Transition to ERROR |
+| 场景 | 错误码 | 行为 |
+|------|--------|------|
+| 无效状态转换 | `7001 AGENT_STATE_INVALID` | 记录日志并重置为 IDLE |
+| 工具未找到 | `7002 AGENT_TOOL_NOT_FOUND` | 报告给 LLM，继续 ReAct |
+| LLM 调用失败 | `0004 TIMEOUT_ERROR` | 重试或中止 |
+| 达到最大迭代次数 | `7004 AGENT_MAX_ITERATIONS` | 返回部分结果 |
+| 不可恢复失败 | `7003 AGENT_EXECUTION_FAILED` | 转换为 ERROR 状态 |
 
-## Concurrency — [TBD: filled by F11]
+## 并发 — [TBD: filled by F11]
 
-- Each agent execution runs within the LLM semaphore
-- Multi-agent orchestration runs sub-agents sequentially by default
-- Parallel sub-agent execution requires explicit config
+- 每次 Agent 执行在 LLM 信号量内运行
+- 多 Agent 编排默认顺序执行子 Agent
+- 并行子 Agent 执行需要显式配置
 
 [TBD: filled by work orders F11, F12]

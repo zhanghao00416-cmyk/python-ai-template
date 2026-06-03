@@ -63,7 +63,7 @@ app = FastAPI(lifespan=lifespan)
 - 读取 `configs/default.yaml` 的 `knowledge.collections` 配置
 - 对每个声明的集合：
   - 检查是否存在，不存在则创建
-  - 创建 payload 索引：`filename`, `type`, `category`, `uploader_id`, `chunk_index`
+  - 创建 payload 索引：`doc_type`, `source`, `tag`, `uploader`, `doc_id`
   - 创建稀疏向量索引（BM25）：`sparse_vector_name` = `bm25`
 - 失败仅告警，不阻塞启动
 

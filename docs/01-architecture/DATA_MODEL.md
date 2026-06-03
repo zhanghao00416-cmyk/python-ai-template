@@ -1,125 +1,125 @@
-# Data Model
+# 数据模型
 
-## Overview
+## 概述
 
-This document defines the database model framework for the Python AI Template. The primary datastore is PostgreSQL (AsyncEngine + SQLAlchemy), managed through `infra/database.py` BaseRepo. Redis is used for caching, rate limiting, and session state. Qdrant is used for vector storage.
+本文档定义 Python AI Template 的数据库模型框架。主数据存储为 PostgreSQL（AsyncEngine + SQLAlchemy），通过 `infra/database.py` 的 BaseRepo 管理。Redis 用于缓存、限流和会话状态。Qdrant 用于向量存储。
 
-## PostgreSQL Tables
+## PostgreSQL 表
 
 ### sessions — [TBD: filled by F02, F09]
 
-Stores chat/conversation sessions.
+存储聊天/对话会话。
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | UUID (PK) | Session identifier |
-| user_id | VARCHAR(255) | Owner user identifier |
-| title | VARCHAR(500) | Session display title |
-| intent_type | VARCHAR(50) | Classified intent type (qa/task/chat/retrieve_only) |
-| model_config | JSONB | Model configuration for this session |
-| created_at | TIMESTAMPTZ | Session creation time |
-| updated_at | TIMESTAMPTZ | Last update time |
-| metadata | JSONB | Extensible session metadata |
+| id | UUID (PK) | 会话标识符 |
+| user_id | VARCHAR(255) | 所属用户标识符 |
+| title | VARCHAR(500) | 会话显示标题 |
+| intent_type | VARCHAR(50) | 分类意图类型（qa/task/chat/retrieve_only） |
+| model_config | JSONB | 该会话的模型配置 |
+| created_at | TIMESTAMPTZ | 会话创建时间 |
+| updated_at | TIMESTAMPTZ | 最后更新时间 |
+| metadata | JSONB | 可扩展的会话元数据 |
 
 ### messages — [TBD: filled by F09]
 
-Stores individual messages within a session.
+存储会话中的单条消息。
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | UUID (PK) | Message identifier |
-| session_id | UUID (FK → sessions.id) | Parent session |
-| role | VARCHAR(20) | Message role: user / assistant / system / tool |
-| content | TEXT | Message content |
-| token_count | INTEGER | Token count for context window management |
-| model_name | VARCHAR(100) | LLM model used for generation |
-| citations | JSONB | Citation references from RAG |
-| tool_calls | JSONB | Tool call requests (for agent messages) |
-| tool_results | JSONB | Tool call results (for tool messages) |
-| created_at | TIMESTAMPTZ | Message creation time |
-| metadata | JSONB | Extensible message metadata |
+| id | UUID (PK) | 消息标识符 |
+| session_id | UUID (FK → sessions.id) | 所属会话 |
+| role | VARCHAR(20) | 消息角色：user / assistant / system / tool |
+| content | TEXT | 消息内容 |
+| token_count | INTEGER | 用于上下文窗口管理的 Token 计数 |
+| model_name | VARCHAR(100) | 生成时使用的 LLM 模型 |
+| citations | JSONB | 来自 RAG 的引用参考 |
+| tool_calls | JSONB | 工具调用请求（用于 agent 消息） |
+| tool_results | JSONB | 工具调用结果（用于 tool 消息） |
+| created_at | TIMESTAMPTZ | 消息创建时间 |
+| metadata | JSONB | 可扩展的消息元数据 |
 
 ### tasks — [TBD: filled by F07]
 
-Stores async task records for the ARQ task queue.
+存储 ARQ 任务队列的异步任务记录。
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | UUID (PK) | Task identifier |
-| task_type | VARCHAR(50) | Task type: kb_upload / agent_run / workflow_run / batch_import / batch_eval / batch_embed / custom |
-| status | VARCHAR(20) | Task status: pending / running / completed / failed |
-| input_data | JSONB | Task input payload |
-| output_data | JSONB | Task result payload (when completed) |
-| error_message | TEXT | Error message (if failed) |
-| progress | FLOAT | Task progress percentage (0.0–1.0) |
-| created_at | TIMESTAMPTZ | Task creation time |
-| started_at | TIMESTAMPTZ | Task start time |
-| completed_at | TIMESTAMPTZ | Task completion time |
-| user_id | VARCHAR(255) | Task owner |
-| metadata | JSONB | Extensible task metadata |
+| id | UUID (PK) | 任务标识符 |
+| task_type | VARCHAR(50) | 任务类型：kb_upload / agent_run / workflow_run / batch_import / batch_eval / batch_embed / custom |
+| status | VARCHAR(20) | 任务状态：pending / running / completed / failed |
+| input_data | JSONB | 任务输入载荷 |
+| output_data | JSONB | 任务结果载荷（完成时） |
+| error_message | TEXT | 错误消息（失败时） |
+| progress | FLOAT | 任务进度百分比（0.0–1.0） |
+| created_at | TIMESTAMPTZ | 任务创建时间 |
+| started_at | TIMESTAMPTZ | 任务开始时间 |
+| completed_at | TIMESTAMPTZ | 任务完成时间 |
+| user_id | VARCHAR(255) | 任务所有者 |
+| metadata | JSONB | 可扩展的任务元数据 |
 
 ### agent_trajectories — [TBD: filled by F11, F12]
 
-Stores agent execution traces for observability and evaluation.
+存储 Agent 执行轨迹，用于可观测性和评估。
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | UUID (PK) | Trajectory record identifier |
-| session_id | UUID (FK → sessions.id) | Parent session |
-| agent_name | VARCHAR(100) | Agent identifier |
-| step_index | INTEGER | Step number in ReAct loop |
-| state | VARCHAR(30) | Agent state at this step (IDLE/THINKING/ACTING/OBSERVING/DONE) |
-| thought | TEXT | Agent's reasoning text |
-| action | JSONB | Tool call specification |
-| observation | JSONB | Tool call result |
-| token_usage | JSONB | Token consumption record |
-| created_at | TIMESTAMPTZ | Step timestamp |
+| id | UUID (PK) | 轨迹记录标识符 |
+| session_id | UUID (FK → sessions.id) | 所属会话 |
+| agent_name | VARCHAR(100) | Agent 标识符 |
+| step_index | INTEGER | ReAct 循环中的步骤编号 |
+| state | VARCHAR(30) | 该步骤的 Agent 状态（IDLE/THINKING/ACTING/OBSERVING/DONE） |
+| thought | TEXT | Agent 的推理文本 |
+| action | JSONB | 工具调用规格 |
+| observation | JSONB | 工具调用结果 |
+| token_usage | JSONB | Token 消耗记录 |
+| created_at | TIMESTAMPTZ | 步骤时间戳 |
 
 ### prompt_templates — [TBD: filled by F08]
 
-Stores prompt template metadata and version history (actual content loaded from `prompts/` directory).
+存储 Prompt 模板元数据和版本历史（实际内容从 `prompts/` 目录加载）。
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | UUID (PK) | Template identifier |
-| name | VARCHAR(255, UNIQUE) | Template name (matches filename) |
-| directory | VARCHAR(100) | Directory group (e.g. agents, skills) |
-| description | TEXT | Template description |
-| content | TEXT | Current template content |
-| variables | JSONB | Auto-extracted template variable definitions |
-| version | INTEGER | Current version number (auto-incremented) |
-| baseline_content | TEXT | Original content from prompts/ directory |
-| baseline_version | INTEGER | Version number of the baseline |
-| created_at | TIMESTAMPTZ | Creation time |
-| updated_at | TIMESTAMPTZ | Last modification time |
+| id | UUID (PK) | 模板标识符 |
+| name | VARCHAR(255, UNIQUE) | 模板名称（与文件名一致） |
+| directory | VARCHAR(100) | 目录分组（如 agents、skills） |
+| description | TEXT | 模板描述 |
+| content | TEXT | 当前模板内容 |
+| variables | JSONB | 自动提取的模板变量定义 |
+| version | INTEGER | 当前版本号（自增） |
+| baseline_content | TEXT | 来自 prompts/ 目录的原始内容 |
+| baseline_version | INTEGER | 基线版本号 |
+| created_at | TIMESTAMPTZ | 创建时间 |
+| updated_at | TIMESTAMPTZ | 最后修改时间 |
 
 ### prompt_template_versions — [TBD: filled by F08]
 
-Stores version history for prompt templates, enabling rollback to any previous version.
+存储 Prompt 模板的版本历史，支持回滚到任意历史版本。
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | UUID (PK) | Version record identifier |
-| template_id | UUID (FK → prompt_templates.id) | Parent template |
-| version | INTEGER | Version number |
-| content | TEXT | Template content at this version |
-| description | TEXT | Description at this version |
-| updated_by | VARCHAR(255) | Who made this change |
-| created_at | TIMESTAMPTZ | Version creation time |
+| id | UUID (PK) | 版本记录标识符 |
+| template_id | UUID (FK → prompt_templates.id) | 所属模板 |
+| version | INTEGER | 版本号 |
+| content | TEXT | 该版本的模板内容 |
+| description | TEXT | 该版本的描述 |
+| updated_by | VARCHAR(255) | 变更操作人 |
+| created_at | TIMESTAMPTZ | 版本创建时间 |
 
-## Redis Data Structures — [TBD: filled by F02, F20]
+## Redis 数据结构 — [TBD: filled by F02, F20]
 
 | Key Pattern | Type | TTL | Description |
 |-------------|------|-----|-------------|
-| `rate_limit:{api_key}` | STRING (counter) | Configurable | Rate limit counter |
-| `session_ctx:{session_id}` | HASH | Session TTL | Session context cache |
-| `task_status:{task_id}` | HASH | Task TTL | Async task status |
+| `rate_limit:{api_key}` | STRING (counter) | 可配置 | 限流计数器 |
+| `session_ctx:{session_id}` | HASH | 会话 TTL | 会话上下文缓存 |
+| `task_status:{task_id}` | HASH | 任务 TTL | 异步任务状态 |
 
-## Qdrant Collections — [TBD: filled by F05]
+## Qdrant 集合 — [TBD: filled by F05]
 
-See `docs/04-kb/QDRANT_COLLECTION_CONFIG.md` for detailed vector store schema.
+详细的向量存储 Schema 见 `docs/04-kb/QDRANT_COLLECTION_CONFIG.md`。
 
-## Entity Relationships
+## 实体关系
 
 ```
 sessions 1──N messages
@@ -128,15 +128,15 @@ sessions 1──N tasks (indirect, via task_type)
 prompt_templates 1──N prompt_template_versions
 ```
 
-## Migration Strategy — [TBD: filled by F02]
+## 迁移策略 — [TBD: filled by F02]
 
-- Alembic for migration management
-- Auto-generate migrations from SQLAlchemy models
-- Each work order that modifies the data model must include a migration
+- 使用 Alembic 管理迁移
+- 从 SQLAlchemy 模型自动生成迁移
+- 修改数据模型的工单必须包含迁移
 
-## Repository Access Pattern
+## 仓库访问模式
 
-All database access goes through `domain/*/repo.py` which inherits from `infra/database.py:BaseRepo`:
+所有数据库访问通过继承自 `infra/database.py:BaseRepo` 的 `domain/*/repo.py` 进行：
 
 ```python
 class BaseRepo:
@@ -147,6 +147,6 @@ class BaseRepo:
     async def list(filters, pagination)
 ```
 
-Domain code never writes raw SQL; all queries go through repo abstractions.
+领域代码不直接写原始 SQL；所有查询通过 repo 抽象层执行。
 
 [TBD: filled by work orders F02, F05, F07, F08, F09, F11]
