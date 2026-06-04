@@ -239,6 +239,12 @@ class ContextSettings(BaseSettings):
     model_config = {"env_prefix": "CONTEXT_"}
 
 
+class WorkflowSettings(BaseSettings):
+    max_concurrent_nodes: int = 5
+
+    model_config = {"env_prefix": "WORKFLOW_"}
+
+
 class Settings(BaseSettings):
     server: ServerSettings = ServerSettings()
     database: DatabaseSettings = DatabaseSettings()
@@ -255,6 +261,8 @@ class Settings(BaseSettings):
     json_repair: JsonRepairSettings = JsonRepairSettings()
     task_queue: TaskQueueSettings = TaskQueueSettings()
     context: ContextSettings = ContextSettings()
+    workflow: WorkflowSettings = WorkflowSettings()
+    mcp_servers: list[dict[str, Any]] = []
 
     model_config = {"env_prefix": ""}
 
@@ -271,6 +279,9 @@ class Settings(BaseSettings):
 
         settings = cls()
         _apply_yaml_to_settings(settings, merged)
+        # Apply list-type config sections (e.g. mcp_servers)
+        if "mcp_servers" in merged and isinstance(merged["mcp_servers"], list):
+            settings.mcp_servers = merged["mcp_servers"]
         return settings
 
 

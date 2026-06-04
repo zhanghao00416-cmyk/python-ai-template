@@ -4,7 +4,7 @@
 
 Agent 引擎（`app/agent/`）是独立于业务领域的执行引擎。它提供基于状态机的 Agent 生命周期、ReAct（推理-行动）循环执行以及多 Agent 协作策略。领域层编排 Agent 执行；Agent 永不直接访问数据库。
 
-## 状态机 — [TBD: filled by F11]
+## 状态机 — [filled by F11]
 
 ### Agent 状态
 
@@ -23,7 +23,7 @@ IDLE ──→ THINKING ──→ ACTING ──→ OBSERVING ──→ DONE
 | DONE | Agent 已生成最终回答 |
 | ERROR | Agent 遇到不可恢复的错误 |
 
-### 状态转换规则 — [TBD: filled by F11]
+### 状态转换规则 — [filled by F11]
 
 | 从 | 到 | 触发条件 |
 |----|----|----------|
@@ -35,7 +35,7 @@ IDLE ──→ THINKING ──→ ACTING ──→ OBSERVING ──→ DONE
 | 任意 | ERROR | 不可恢复异常 |
 | 任意 | IDLE | 触发重置 |
 
-## ReAct 循环 — [TBD: filled by F11]
+## ReAct 循环 — [filled by F11]
 
 ### 执行周期
 
@@ -52,7 +52,7 @@ IDLE ──→ THINKING ──→ ACTING ──→ OBSERVING ──→ DONE
    a. DONE（附带截断通知）
 ```
 
-### 轨迹记录 — [TBD: filled by F11]
+### 轨迹记录 — [filled by F11]
 
 每一步记录一个 `TrajectoryEntry`：
 
@@ -70,7 +70,7 @@ class TrajectoryEntry:
 
 轨迹通过 `domain/repo` 存储（Agent 永不直接写入数据库）。
 
-### Prompt 模板 — [TBD: filled by F11]
+### Prompt 模板 — [filled by F11]
 
 ReAct prompt 遵循从 `prompts/agent/react_template.md` 加载的结构化格式：
 
@@ -86,7 +86,7 @@ Thought: <最终推理>
 Final Answer: <回答>
 ```
 
-## Agent 基类 — [TBD: filled by F11]
+## Agent 基类 — [filled by F11]
 
 ```python
 class BaseAgent(ABC):
@@ -112,50 +112,41 @@ class BaseAgent(ABC):
         """Check iteration limit and state."""
 ```
 
-## 多 Agent 协作 — [TBD: filled by F12]
+## 多 Agent 协作 — [filled by F12]
 
 ### 编排者模式
 
-```python
-class OrchestratorAgent(BaseAgent):
-    """
-    Coordinates multiple sub-agents to solve complex tasks.
+实现位于 `app/agent/orchestrator.py`。`OrchestratorAgent(BaseAgent)` 提供：
 
-    1. Decomposes task into sub-tasks
-    2. Assigns sub-tasks to specialized agents
-    3. Collects and synthesizes results
-    """
-    sub_agents: dict[str, BaseAgent]
+- `plan()` — 分解任务为 `SubTask` 列表（支持 LLM JSON 解析或 round-robin 降级）
+- `delegate()` — 委派子任务给指定子 Agent，返回 `SubTaskResult`
+- `synthesize()` — 汇总子 Agent 结果（支持 LLM 合成或拼接降级）
+- `_run_loop()` — 完整生命周期：THINKING(plan) → [ACTING(delegate) → OBSERVING(result)]* → THINKING(synthesise) → DONE
 
-    async def plan(self, input: str) -> list[SubTask]
-    async def delegate(self, task: SubTask) -> AgentResult
-    async def synthesize(self, results: list[AgentResult]) -> str
-```
+数据模型：`SubTask`(frozen dataclass: task_id/description/agent_name/context)、`SubTaskResult`(frozen dataclass: task_id/agent_name/content/success/token_usage/trajectory)。
 
-### 辩论策略 — [TBD: filled by F12]
+`max_sub_agents` 限制（默认 5，可配置于 `configs/agents.yaml` orchestrator 段）。
 
-```python
-class DebateStrategy:
-    """
-    Multiple agents propose and critique solutions.
+### 辩论策略 — [filled by F12]
 
-    1. Agent A proposes a solution
-    2. Agent B critiques the solution
-    3. Agent A revises based on critique
-    4. Repeat for N rounds or until consensus
-    """
-    rounds: int = 3
-    consensus_threshold: float = 0.8
-```
+`DebateStrategy` 实现于 `app/agent/orchestrator.py`：
 
-### 子 Agent 通信 — [TBD: filled by F12]
+- `rounds`（默认 3）——最大辩论轮数
+- `consensus_threshold`（默认 0.8）——共识阈值
+- `execute(proposer, critic, task_description)` — 执行 propose → critique → revise 循环
+- 每轮从 critic 输出解析 `SCORE: X.X`，达到阈值即停止
+- 返回 `DebateResult`（final_answer/rounds_completed/consensus_reached/history/total_token_usage）
+- 历史由 `DebateRound`(round_index/proposal/critique/score) 列表组成
+
+### 子 Agent 通信 — [filled by F12]
 
 - 子 Agent 通过编排者通信（不直接 Agent 之间通信）
-- 共享上下文由编排者维护
-- 每个子 Agent 拥有独立的轨迹记录
-- 结果在编排者的最终回答中聚合
+- 共享上下文由编排者维护（`SubTask.context` 传递）
+- 每个子 Agent 拥有独立的轨迹记录（`SubTaskResult.trajectory`）
+- 结果在编排者的最终回答中聚合（`synthesize()` 输出）
+- 子 Agent 失败不阻塞编排——`delegate()` 捕获异常返回 `SubTaskResult(success=False)`
 
-## 工具集成 — [TBD: filled by F11]
+## 工具集成 — [filled by F11]
 
 Agent 通过 `tools/registry` 使用工具：
 
@@ -170,7 +161,7 @@ result = await tool_registry.call("knowledge_search", query="...")
 
 Agent 永不实现工具逻辑——仅调用已注册的工具。
 
-## 错误处理 — [TBD: filled by F11]
+## 错误处理 — [filled by F11, F12]
 
 | 场景 | 错误码 | 行为 |
 |------|--------|------|
@@ -179,11 +170,12 @@ Agent 永不实现工具逻辑——仅调用已注册的工具。
 | LLM 调用失败 | `0004 TIMEOUT_ERROR` | 重试或中止 |
 | 达到最大迭代次数 | `7004 AGENT_MAX_ITERATIONS` | 返回部分结果 |
 | 不可恢复失败 | `7003 AGENT_EXECUTION_FAILED` | 转换为 ERROR 状态 |
+| 多 Agent 编排失败 | `7005 AGENT_ORCHESTRATION_FAILED` | 编排逻辑异常时抛出（子 Agent 失败不触发，仅记录） |
 
-## 并发 — [TBD: filled by F11]
+## 并发 — [filled by F11, F12]
 
 - 每次 Agent 执行在 LLM 信号量内运行
-- 多 Agent 编排默认顺序执行子 Agent
-- 并行子 Agent 执行需要显式配置
+- 多 Agent 编排默认顺序执行子 Agent（`OrchestratorAgent._run_loop` 串行 delegate）
+- 并行子 Agent 执行需要显式配置（F12 仅实现默认顺序执行）
 
-[TBD: filled by work orders F11, F12]
+[filled by work orders F11, F12]

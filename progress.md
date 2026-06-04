@@ -9,8 +9,8 @@
 | **current_phase** | `implement` |
 | **build_mode** | `greenfield` |
 | **last_updated** | 2026-06-04 |
-| **last_ticket** | 工单 F09 上下文管理器（会话/消息/窗口截取） |
-| **last_verified** | pytest 376 passed, 9 skipped; init.ps1 7/7; architecture 6/6 |
+| **last_ticket** | 工单 F12 多 Agent 协作 Orchestrator 模式 |
+| **last_verified** | pytest 553 passed, 9 skipped; 架构合规 6/6 |
 | **task_mode** | `linear` |
 
 ## 阶段说明
@@ -35,10 +35,10 @@
 
 | 字段 | 值 |
 |------|-----|
-| **active_feature_id** | `F10` |
-| **active_ticket** | `工单/F10_tools_registry.md` |
+| **active_feature_id** | `F13` |
+| **active_ticket** | `工单/F13_workflow_dag_engine.md` |
 | **status** | `not_started` |
-| **goal** | 工单 F10 阶段 1：只读，读 TOOLS_MCP_SPEC / 前序代码，禁止写代码 |
+| **goal** | 工单 F13 阶段 1：只读，读 WORKFLOW_SPEC / 前序代码，禁止写代码 |
 
 ## 已验证（可信任）
 
@@ -64,6 +64,9 @@
 - [x] `F07`：异步任务队列 + 统一任务查询（47 unit tests, architecture 6/6）
 - [x] `F08`：Prompt 管理器 + 模板渲染 + 版本管理（46 unit tests, architecture 6/6）
 - [x] `F09`：上下文管理器（57 unit tests, architecture 6/6）
+- [x] `F10`：Tools 注册中心 + MCP 适配器 + Skills（64 unit tests, architecture 6/6）
+- [x] `F11`：Agent 基类 + 状态机 + ReAct 循环（64 unit tests, architecture 6/6）
+- [x] `F12`：多 Agent 协作 Orchestrator 模式（49 unit tests, 全量 553 passed, architecture 6/6）
 
 ## 阻塞项
 
@@ -75,15 +78,46 @@
 
 | 编号 | 类型 | 涉及功能 | 日期 | 状态 |
 |------|------|----------|------|------|
-| — | 无变更 | — | — | — |
+| CO-001 | hotfix | F09 context YAML 配置字段名修复 | 2026-06-04 | done |
 
 ## 下一步（优先级）
 
 1. 新 Chat 发送 `session-handoff.md` 中的下一会话开场白。
-2. 执行工单 **F10** 阶段 1→2→3（`feature_list.json` 中 F10 为唯一 `in_progress`）。
-3. 工单顺序：F10 → F11 → … → F21（F01-F09 已 passing）。
+2. 执行工单 **F13** 阶段 1→2→3（`feature_list.json` 中 F13 为唯一 `in_progress`）。
+3. 工单顺序：F13 → … → F21（F01-F12 已 passing）。
 
 ## 会话历史摘要
+
+### 2026-06-04（F12 实现）
+
+- **F12 阶段 1→2→3 完成**
+- 阶段 1：读 AGENT_SPEC / API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F12 工单 + 前序代码（base.py/state.py/react.py/trajectory.py/service.py/agent.py/agents.yaml）
+- 阶段 2 实现文件：
+  - `app/agent/orchestrator.py`：OrchestratorAgent(BaseAgent) + SubTask/SubTaskResult dataclass + DebateStrategy/DebateRound/DebateResult
+  - `app/agent/__init__.py`：导出 OrchestratorAgent + 5 个新符号
+  - `app/domain/agent_orchestration/service.py`：_create_engine() 支持 orchestrator + _build_sub_agents() + _load_orchestrator_config()
+  - `tests/test_12_multi_agent.py`：49 项测试
+- 阶段 3：AGENT_SPEC.md 6 处 F12 TBD→filled + 6 处 F11 TBD→filled；feature_list.json F12→passing + F13→in_progress
+
+### 2026-06-04（F11 实现）
+
+- **F11 阶段 1→2→3 完成**
+- 阶段 1：读 AGENT_SPEC / DATA_MODEL / ERROR_CODE / API_CONTRACT / ARCHITECTURE / DEPENDENCY_MAP / F11 工单 + 前序代码（gateway/registry/errors/prompts/react_template）
+- 阶段 2 实现文件：
+  - `app/agent/state.py`：AgentState 枚举（7 状态）+ 状态转换规则（含自循环）+ transition()
+  - `app/agent/trajectory.py`：TokenUsage / ToolCall / TrajectoryEntry / AgentResult 数据模型
+  - `app/agent/base.py`：BaseAgent ABC（run/think/act/observe/should_continue）
+  - `app/agent/react.py`：ReactAgent ReAct 循环（注入 think_fn、max_iterations、token 累积）
+  - `app/agent/__init__.py`：包导出
+  - `app/schemas/agent.py`：AgentRunRequest/Response、TrajectoryStep/Detail、AgentConfig
+  - `app/domain/agent_orchestration/__init__.py`：包导出
+  - `app/domain/agent_orchestration/repo.py`：AgentTrajectoryRepo 持久化层
+  - `app/domain/agent_orchestration/service.py`：AgentOrchestrationService 业务编排
+  - `app/api/v1/agent.py`：POST /agent/run + GET /agent/trajectories + GET /agent/trajectories/{task_id}
+  - `app/main.py`：注册 agent_router
+  - `prompts/agents/react_template.md`：ReAct prompt 模板
+  - `tests/test_11_agent.py`：64 项测试
+- 阶段 3：evaluator-rubric.md 记录 Accept；feature_list.json F11→passing + F12→in_progress
 
 ### 2026-06-04（F09 实现）
 

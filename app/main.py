@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from app.bootstrap import lifespan
 from app.api.v1.health import router as health_router
 from app.api.v1.task import router as task_router
+from app.api.v1.agent import router as agent_router
+from app.api.v1.workflow import router as workflow_router
 from app.middleware.trace import TraceMiddleware
 from app.middleware.exception import exception_handler_middleware
 
@@ -18,3 +20,5 @@ app.middleware("http")(exception_handler_middleware)
 
 app.include_router(health_router)
 app.include_router(task_router)
+app.include_router(agent_router)
+app.include_router(workflow_router)

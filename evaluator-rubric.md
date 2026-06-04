@@ -45,6 +45,8 @@
 | 日期 | F编号 | 评审人 | 结论 | 关键问题 |
 |------|-------|--------|------|---------|
 | 2026-06-02 | F01 | Agent | Accept | 13/13 pytest；check-architecture.sh 通过 |
+| 2026-06-04 | F11 | Agent | Accept | 64/64 pytest；全量 504 passed；架构合规测试通过 |
+| 2026-06-04 | F12 | Agent | Accept | 49/49 pytest；全量 553 passed；架构合规 6/6；OrchestratorAgent plan/delegate/synthesize 完整；轨迹记录完整 |
 
 ## 工单级检查项模板
 

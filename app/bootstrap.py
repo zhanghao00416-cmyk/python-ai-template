@@ -31,12 +31,13 @@ async def startup() -> None:
     except Exception as exc:
         logger.error("bootstrap.infra_failed", error=str(exc))
 
-    _register_services()
+    await _register_services()
     logger.info("bootstrap.startup_complete")
 
 
 async def shutdown() -> None:
     logger.info("bootstrap.shutdown_begin")
+    await _shutdown_mcp()
     await _shutdown_infra()
     container.cleanup()
     logger.info("bootstrap.shutdown_complete")
@@ -189,12 +190,126 @@ def _preload_prompts(settings: Any) -> None:
     logger.info("bootstrap.prompts_preloaded", count=count)
 
 
-def _register_services() -> None:
+def _load_skills(skill_registry: Any) -> int:
+    """Load all skill YAML files from the skills/ directory."""
+    from pathlib import Path
+
+    skills_dir = Path("skills")
+    if not skills_dir.is_dir():
+        logger.info("bootstrap.skills_dir_missing")
+        return 0
+
+    count = 0
+    for yaml_file in sorted(skills_dir.glob("*.yaml")):
+        if yaml_file.name.startswith("_"):
+            continue  # skip _schema.yaml
+        try:
+            skill_registry.load_from_yaml(str(yaml_file))
+            count += 1
+        except Exception as exc:
+            logger.warning(
+                "bootstrap.skill_load_failed",
+                file=str(yaml_file),
+                error=str(exc),
+            )
+    return count
+
+
+def _load_workflow_yamls(wf_registry: Any) -> int:
+    """Load workflow YAML files from the workflows/ directory."""
+    from pathlib import Path
+
+    wf_dir = Path("workflows")
+    if not wf_dir.is_dir():
+        logger.info("bootstrap.workflows_dir_missing")
+        return 0
+
+    count = 0
+    for yaml_file in sorted(wf_dir.glob("*.yaml")):
+        if yaml_file.name.startswith("_"):
+            continue  # skip _schema.yaml
+        try:
+            wf_registry.register_from_yaml(str(yaml_file))
+            count += 1
+        except Exception as exc:
+            logger.warning(
+                "bootstrap.workflow_load_failed",
+                file=str(yaml_file),
+                error=str(exc),
+            )
+    return count
+
+
+async def _init_mcp_servers(tool_registry: Any) -> int:
+    """Initialize MCP servers from config and register their tools."""
+    settings = get_settings()
+    mcp_configs = getattr(settings, "mcp_servers", None)
+    if not mcp_configs:
+        return 0
+
+    from app.tools.mcp_adapter import (
+        MCPServerConfig,
+        MCPToolConfig,
+        MCPManager,
+        get_mcp_manager,
+    )
+
+    manager = get_mcp_manager()
+    count = 0
+    for srv_cfg in mcp_configs:
+        if isinstance(srv_cfg, dict):
+            tools = [
+                MCPToolConfig(
+                    name=t.get("name", ""),
+                    description=t.get("description", ""),
+                )
+                for t in srv_cfg.get("tools", [])
+            ]
+            config = MCPServerConfig(
+                name=srv_cfg.get("name", ""),
+                url=srv_cfg.get("url", ""),
+                transport=srv_cfg.get("transport", "sse"),
+                timeout=float(srv_cfg.get("timeout", 30.0)),
+                tools=tools,
+            )
+        else:
+            continue
+
+        try:
+            await manager.add_server(config)
+            logger.info("bootstrap.mcp_server_added", server=config.name)
+        except Exception as exc:
+            logger.warning(
+                "bootstrap.mcp_server_failed",
+                server=config.name,
+                error=str(exc),
+            )
+
+    count = await manager.register_tools(tool_registry)
+    return count
+
+
+async def _shutdown_mcp() -> None:
+    """Close all MCP server connections."""
+    try:
+        from app.tools.mcp_adapter import get_mcp_manager
+
+        manager = get_mcp_manager()
+        await manager.close_all()
+        logger.info("bootstrap.mcp_closed")
+    except Exception as exc:
+        logger.warning("bootstrap.mcp_close_failed", error=str(exc))
+
+
+async def _register_services() -> None:
     from app.infra.circuit_breaker import get_circuit_breaker
     from app.infra.semaphore_manager import get_semaphore_manager
     from app.services.llm.gateway import LLMGateway
     from app.services.llm.router import LLMRouter
     from app.services.context_manager import ContextManager
+    from app.tools.registry import ToolRegistry, get_tool_registry
+    from app.tools.builtin import register_builtin_tools
+    from app.services.skill_registry import SkillRegistry, set_skill_registry
 
     settings = get_settings()
 
@@ -233,7 +348,34 @@ def _register_services() -> None:
     )
     container.register(ContextManager, lambda cm=context_mgr: cm, singleton=True)
 
-    logger.info("bootstrap.services_registered", circuit_breakers=cb_names)
+    # --- F10: Tools + Skills ------------------------------------------------
+    tool_registry = get_tool_registry()
+    builtin_count = register_builtin_tools(tool_registry)
+    container.register(ToolRegistry, lambda tr=tool_registry: tr, singleton=True)
+
+    # MCP servers
+    mcp_count = await _init_mcp_servers(tool_registry)
+
+    skill_registry = SkillRegistry(tools=tool_registry)
+    skills_count = _load_skills(skill_registry)
+    set_skill_registry(skill_registry)
+    container.register(SkillRegistry, lambda sr=skill_registry: sr, singleton=True)
+
+    # --- F13: Workflow Registry -----------------------------------------------
+    from app.workflow.registry import WorkflowRegistry, get_workflow_registry
+
+    wf_registry = get_workflow_registry()
+    wf_yaml_count = _load_workflow_yamls(wf_registry)
+    container.register(WorkflowRegistry, lambda wr=wf_registry: wr, singleton=True)
+
+    logger.info(
+        "bootstrap.services_registered",
+        circuit_breakers=cb_names,
+        builtin_tools=builtin_count,
+        skills=skills_count,
+        mcp_tools=mcp_count,
+        workflows_yaml=wf_yaml_count,
+    )
 
 
 def get_uptime() -> float:

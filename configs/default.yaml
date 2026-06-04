@@ -124,8 +124,9 @@ knowledge:
     enable_rerank: false
 
 context:
-  history_max_rounds: 5
-  max_context_tokens: 4096
+  redis_cache_ttl: 3600
+  default_max_tokens: 4096
+  default_strategy: "recent_priority"
 
 agent:
   max_iterations: 10
@@ -159,3 +160,5 @@ prompt_config:
 
 json_repair:
   enabled: true
+
+mcp_servers: []

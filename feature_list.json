@@ -80,31 +80,31 @@
       "name": "Tools 注册中心 + MCP 适配器 + Skills",
       "behavior": "注册 tool/skill → 通过 registry 调用 → MCP 协议返回结果 → skill 遮蔽 tool 互斥",
       "verification": "pytest tests/test_10_tools_registry.py",
-      "state": "in_progress",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "64 unit tests pass; init.ps1 7/7; architecture 6/6; ToolRegistry (register/get/list_tools/call/override/has/clear) with timeout protection (asyncio.wait_for) + AGENT_TOOL_NOT_FOUND(7002)/TIMEOUT(4) errors; ToolDefinition frozen dataclass (name/description/category/parameters/fn/timeout/requires_auth); @tool decorator auto-registers with name/description inference; _extract_parameters with typing.get_type_hints for JSON Schema; MCPAdapter (connect/close/call_tool via JSON-RPC/make_callable) with SERVICE_UNAVAILABLE(3) error; MCPManager (add_server/close_all/register_tools); MCPServerConfig/MCPToolConfig frozen dataclasses; SkillRegistry (load_from_yaml with tool validation/get/list_skills/run with prompt loading + tool set union + conflict detection); SkillDefinition/SkillContext/SkillResult dataclasses; builtin calculator (add/sub/mul/div + symbol ops + div-by-zero) + datetime_now (UTC/local ISO); register_builtin_tools() entry point; bootstrap DI registration (ToolRegistry/SkillRegistry singletons + skill loading from skills/*.yaml + MCP server init/shutdown); mcp_servers config section (list type); config.py Settings.mcp_servers field; TOOLS_MCP_SPEC.md TBD markers filled by F10"
     },
     {
       "id": "F11",
       "name": "Agent 基类 + 状态机 + ReAct 循环 + 三引擎（react/workflow/orchestrator）",
       "behavior": "Agent 执行 3 步 tool/skill 调用，轨迹记录完整（IDLE→THINKING→ACTING→OBSERVING→DONE），支持 react/workflow/orchestrator 三种引擎",
       "verification": "pytest tests/test_11_agent.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "64/64 tests pass; 全量 504 passed; 状态机 7 状态转换正确 (含自循环); ReAct 引擎支持 3 步 tool 调用; 轨迹记录完整; API 端点 3 个 (POST /agent/run, GET /agent/trajectories, GET /agent/trajectories/{task_id}); 架构合规 (agent 不导入 infra/api/domain); 7xxx 错误码使用正确"
     },
     {
       "id": "F12",
       "name": "多 Agent 协作（Orchestrator 模式）",
       "behavior": "Orchestrator 分配 3 个子 agent 任务 → 汇总结果，轨迹记录完整",
       "verification": "pytest tests/test_12_multi_agent.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "49 unit tests pass; 全量 553 passed, 9 skipped; 架构合规 6/6; OrchestratorAgent(BaseAgent) with plan/delegate/synthesize; SubTask/SubTaskResult data models; DebateStrategy with propose/critique/revise loop + consensus scoring; sub-agents communicate through orchestrator only; trajectory recording complete (THINKING→ACTING→OBSERVING→...→DONE); token accumulation from sub-agents; max_sub_agents limit enforced; _create_engine() supports orchestrator type; 7005 AGENT_ORCHESTRATION_FAILED error code; AGENT_SPEC.md TBD markers filled by F12"
     },
     {
       "id": "F13",
       "name": "Workflow DAG 引擎",
       "behavior": "3 节点 DAG 执行，条件边路由正确，StateGraph 流转正常",
       "verification": "pytest tests/test_13_workflow.py",
-      "state": "not_started",
+      "state": "in_progress",
       "evidence": ""
     },
     {

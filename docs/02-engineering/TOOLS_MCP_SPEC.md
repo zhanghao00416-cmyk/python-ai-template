@@ -74,7 +74,7 @@ step_capabilities = skill_tools ∪ step.tools ∪ agent.default_tools
 
 ---
 
-## 2. Tool 注册表 — [TBD: filled by F10]
+## 2. Tool 注册表 — [filled by F10]
 
 ### 注册 API
 
@@ -113,7 +113,7 @@ class ToolDefinition:
 
 ---
 
-## 3. Skill 注册表 — [TBD: filled by F10+]
+## 3. Skill 注册表 — [filled by F10]
 
 ### 加载
 
@@ -166,7 +166,7 @@ prompts/skills/
 
 ---
 
-## 4. MCP 适配器协议 — [TBD: filled by F10]
+## 4. MCP 适配器协议 — [filled by F10]
 
 ### 适配器架构
 
@@ -198,7 +198,7 @@ mcp_servers:
 
 ---
 
-## 5. 内建工具 — [TBD: filled by F10]
+## 5. 内建工具 — [filled by F10]
 
 | 名称 | 类别 | 说明 | 阶段 |
 |------|------|------|------|
@@ -210,7 +210,7 @@ mcp_servers:
 
 ---
 
-## 6. 内建技能 — [TBD: filled by F10+]
+## 6. 内建技能 — [filled by F10]
 
 | ID | 工具 | 提示词 | 知识库范围 | 执行模式 |
 |----|------|--------|------------|----------|
