@@ -21,6 +21,18 @@ domain ← agent/workflow (域编排是调用者)
 
 ## 域注册表
 
+### session — [filled by F09]
+
+| 方面 | 详情 |
+|------|------|
+| 包 | `app/domain/session/` |
+| 职责 | 会话 CRUD、消息追加/查询/更新、会话过期标记 |
+| 关键文件 | `service.py`, `repo.py` |
+| 依赖 | `services/context_manager`（上下文窗口截断 + Redis 缓存） |
+| API 端点 | F14 负责：POST /api/v1/chat, GET/DELETE session, GET messages |
+| 数据模型 | `sessions`, `messages` |
+| 工单 | F09（服务层）, F14（API 层） |
+
 ### chat — [TBD: filled by F14]
 
 | 方面 | 详情 |
@@ -111,8 +123,8 @@ domain ← agent/workflow (域编排是调用者)
 |------|------|--------|
 | LLM Gateway | `services/llm/` | 所有域 |
 | SSE Stream | `services/sse_stream/` | `chat`, `knowledge` |
-| Context Manager | `services/context/` | `chat`, `agent` |
+| Context Manager | `services/context_manager.py` | `session`, `chat`, `agent` |
 | Prompt Manager | `services/prompt_manager/` | 所有域 |
 | Task Queue | `services/task_queue/` | `workflow_orchestration` |
 
-[TBD: filled by work orders F05, F08, F11–F17]
+[TBD: filled by work orders F05, F08, F09, F11–F17]

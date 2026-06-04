@@ -6,7 +6,7 @@
 
 ## PostgreSQL 表
 
-### sessions — [TBD: filled by F02, F09]
+### sessions — [filled by F02]
 
 存储聊天/对话会话。
 
@@ -21,9 +21,9 @@
 | updated_at | TIMESTAMPTZ | 最后更新时间 |
 | metadata | JSONB | 可扩展的会话元数据 |
 
-### messages — [TBD: filled by F09]
+### messages — [filled by F09]
 
-存储会话中的单条消息。
+存储会话中的单条消息。F09 实现 `app/domain/session/repo.py` 中的 `MessageRepo(BaseRepo[MessageModel])` 和 `app/domain/session/service.py` 中的 `SessionService`，提供消息追加、查询、更新和上下文窗口截断能力。
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -39,7 +39,7 @@
 | created_at | TIMESTAMPTZ | 消息创建时间 |
 | metadata | JSONB | 可扩展的消息元数据 |
 
-### tasks — [TBD: filled by F07]
+### tasks — [filled by F07]
 
 存储 ARQ 任务队列的异步任务记录。
 
@@ -52,6 +52,7 @@
 | output_data | JSONB | 任务结果载荷（完成时） |
 | error_message | TEXT | 错误消息（失败时） |
 | progress | FLOAT | 任务进度百分比（0.0–1.0） |
+| callback_url | VARCHAR(2048) | 任务完成时回调 URL（可选） |
 | created_at | TIMESTAMPTZ | 任务创建时间 |
 | started_at | TIMESTAMPTZ | 任务开始时间 |
 | completed_at | TIMESTAMPTZ | 任务完成时间 |
@@ -75,9 +76,9 @@
 | token_usage | JSONB | Token 消耗记录 |
 | created_at | TIMESTAMPTZ | 步骤时间戳 |
 
-### prompt_templates — [TBD: filled by F08]
+### prompt_templates — [filled by F08]
 
-存储 Prompt 模板元数据和版本历史（实际内容从 `prompts/` 目录加载）。
+存储 Prompt 模板元数据和当前版本（实际内容从 `prompts/` 目录加载，修改写入 DB）。
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -93,7 +94,7 @@
 | created_at | TIMESTAMPTZ | 创建时间 |
 | updated_at | TIMESTAMPTZ | 最后修改时间 |
 
-### prompt_template_versions — [TBD: filled by F08]
+### prompt_template_versions — [filled by F08]
 
 存储 Prompt 模板的版本历史，支持回滚到任意历史版本。
 
@@ -107,12 +108,12 @@
 | updated_by | VARCHAR(255) | 变更操作人 |
 | created_at | TIMESTAMPTZ | 版本创建时间 |
 
-## Redis 数据结构 — [TBD: filled by F02, F20]
+## Redis 数据结构 — [filled by F02, F09]
 
 | Key Pattern | Type | TTL | Description |
 |-------------|------|-----|-------------|
 | `rate_limit:{api_key}` | STRING (counter) | 可配置 | 限流计数器 |
-| `session_ctx:{session_id}` | HASH | 会话 TTL | 会话上下文缓存 |
+| `session_ctx:{session_id}` | HASH | `ContextSettings.redis_cache_ttl`（默认 3600s） | 会话上下文缓存（F09：由 `ContextManager` 管理，消息追加时失效） |
 | `task_status:{task_id}` | HASH | 任务 TTL | 异步任务状态 |
 
 ## Qdrant 集合 — [TBD: filled by F05]
@@ -128,7 +129,7 @@ sessions 1──N tasks (indirect, via task_type)
 prompt_templates 1──N prompt_template_versions
 ```
 
-## 迁移策略 — [TBD: filled by F02]
+## 迁移策略 — [filled by F02]
 
 - 使用 Alembic 管理迁移
 - 从 SQLAlchemy 模型自动生成迁移
@@ -149,4 +150,4 @@ class BaseRepo:
 
 领域代码不直接写原始 SQL；所有查询通过 repo 抽象层执行。
 
-[TBD: filled by work orders F02, F05, F07, F08, F09, F11]
+[filled by F05, F07, F08, F09; remaining: F11]

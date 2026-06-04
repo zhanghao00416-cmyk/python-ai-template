@@ -4,7 +4,7 @@
 
 本文档定义了知识库系统的 Qdrant 向量存储配置。系统支持多集合，具有可配置的类型、类别以及混合检索（稠密 + 稀疏向量）。
 
-## 多集合架构 — [TBD: filled by F05]
+## 多集合架构 — [filled by F05]
 
 ### 集合管理
 
@@ -13,7 +13,7 @@
 - 可通过 API 动态创建/删除集合
 - 每个集合独立，拥有自己的向量配置
 
-### 默认集合 — [TBD: filled by F05]
+### 默认集合 — [filled by F05]
 
 ```yaml
 qdrant:
@@ -54,7 +54,7 @@ qdrant:
           type: "keyword"
 ```
 
-## 向量配置 — [TBD: filled by F05]
+## 向量配置 — [filled by F05]
 
 ### 稠密向量
 
@@ -69,7 +69,7 @@ qdrant:
 | text-embedding-v3 | 1024 | 文本嵌入（qwen_cloud，默认） |
 | bge-large-zh-v1.5 | 1024 | 本地嵌入（vLLM 降级） |
 
-### 稀疏向量 — [TBD: filled by F05]
+### 稀疏向量 — [filled by F05]
 
 稀疏向量使用 BM25 风格的词项向量实现关键词级别匹配：
 
@@ -78,7 +78,7 @@ qdrant:
 - 使用分词 + 词频生成
 - 在混合检索中使用倒数排名融合（RRF）
 
-### 混合检索 — [TBD: filled by F05]
+### 混合检索 — [filled by F05]
 
 ```
 Query
@@ -105,7 +105,7 @@ score(d) = Σ (1 / (k + rank_i(d)))
 where k = 60 (default RRF constant)
 ```
 
-## 负载模式 — [TBD: filled by F05]
+## 负载模式 — [filled by F05]
 
 每个 Qdrant 点具有以下负载：
 
@@ -145,7 +145,7 @@ qdrant:
 - Qdrant 中的负载索引（用于过滤）
 - RAG 查询过滤器（将 `doc_type`、`source`、`tag` 作为过滤条件传入）
 
-## 负载索引 — [TBD: filled by F05]
+## 负载索引 — [filled by F05]
 
 为所有可过滤字段创建负载索引：
 
@@ -161,7 +161,7 @@ qdrant:
 
 可在 `configs/default.yaml` 中为每个集合配置额外的索引。
 
-## 集合生命周期 — [TBD: filled by F05]
+## 集合生命周期 — [filled by F05]
 
 ### 启动时自动创建
 
@@ -276,7 +276,7 @@ POST /api/v1/kb/query
 }
 ```
 
-## 错误码 — [TBD: filled by F05, F15a/F15b]
+## 错误码 — [filled by F05]
 
 | 代码 | 名称 | 说明 |
 |------|------|------|
@@ -289,21 +289,14 @@ POST /api/v1/kb/query
 
 > 6xxx 错误码以 `docs/01-architecture/ERROR_CODE.md` 为权威来源，本表与其保持一致。
 
-## Qdrant 客户端配置 — [TBD: filled by F05]
+## Qdrant 客户端配置 — [filled by F05]
 
-```python
-# app/infra/vector_store/qdrant_client.py
-class QdrantClientWrapper:
-    def __init__(self, url: str, timeout: float = 30.0):
-        self.client = qdrant_client.QdrantClient(url=url, timeout=timeout)
+实现位于 `app/infra/vector_store/qdrant_store.py`，提供 `QdrantVectorStore` 类：
 
-    async def create_collection(self, config: CollectionConfig) -> None: ...
-    async def delete_collection(self, name: str) -> None: ...
-    async def upsert_points(self, collection: str, points: list[PointStruct]) -> None: ...
-    async def search(self, collection: str, query_vector: list, limit: int, filters: dict = None) -> list[ScoredPoint]: ...
-    async def delete_points(self, collection: str, point_ids: list[str]) -> None: ...
-```
-
-所有 Qdrant 操作均通过此包装器进行，域代码中绝不直接使用 SDK。
-
-[TBD: filled by work orders F05, F15a/F15b/F15c]
+- 异步客户端：`AsyncQdrantClient`
+- 多集合管理：`create_collection` / `delete_collection` / `collection_exists` / `list_collections`
+- 向量操作：`upsert_points` / `search` / `hybrid_search` / `search_by_strategy` / `delete_points` / `delete_by_filter` / `scroll_points`
+- 检索策略：`similarity`（稠密）、`keyword`（稀疏）、`hybrid`（混合 RRF）、`rrf`
+- 配置来源：`configs/default.yaml` 的 `knowledge.collections` 和 `qdrant` 段
+- 抽象基类：`app/infra/vector_store/base.py` `VectorStoreBase`
+- 错误映射：Qdrant 连接失败 → AI_1202；向量写入失败 → AI_6005

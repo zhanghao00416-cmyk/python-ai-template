@@ -59,7 +59,7 @@ def parse_error_code(value: str | int) -> int:
 
 ## 错误码定义
 
-### 0xxx — 系统 / 基础设施 — [TBD: filled by F01, F03]
+### 0xxx — 系统 / 基础设施 — [filled by F01, F03]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -117,7 +117,7 @@ def parse_error_code(value: str | int) -> int:
 | 5002 | RESERVED_5002 | - | 保留用于业务特定用途 |
 | 5003 | RESERVED_5003 | - | 保留用于业务特定用途 |
 
-### 6xxx — 知识库 — [TBD: filled by F05, F15a/F15b/F15c]
+### 6xxx — 知识库 — [filled by F05, F15a/F15b/F15c]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -148,7 +148,7 @@ def parse_error_code(value: str | int) -> int:
 | 8004 | WORKFLOW_CYCLE_DETECTED | 400 | 工作流 DAG 包含环 |
 | 8005 | WORKFLOW_STATE_ERROR | 400 | 无效的工作流状态转换 |
 
-### 9xxx — 任务队列 / 提示词 / SSE — [TBD: filled by F07, F08, F17]
+### 9xxx — 任务队列 / 提示词 / SSE — [filled by F07, F08, F17]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -160,7 +160,7 @@ def parse_error_code(value: str | int) -> int:
 | 9006 | PROMPT_WRITE_FAILED | 500 | 写入提示词模板失败 |
 | 9007 | SSE_CONNECTION_LOST | 200 | SSE 流式传输期间客户端断开连接 |
 
-### 模型网关 — 使用 11xx 编码（按约定）— [TBD: filled by F04]
+### 模型网关 — 使用 11xx 编码（按约定）— [filled by F04]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -169,7 +169,7 @@ def parse_error_code(value: str | int) -> int:
 | 1103 | MODEL_FORMAT_ERROR | 502 | 模型返回格式错误的响应 |
 | 1104 | CLOUD_MODEL_ERROR | 503 | 云端 API 调用失败（熔断开启） |
 
-### 基础设施 — 使用 12xx 编码 — [TBD: filled by F02, F05]
+### 基础设施 — 使用 12xx 编码 — [filled by F02]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -193,8 +193,8 @@ AppError (base)
 └── TaskError (9xxx)
 ```
 
-## 注册与查找 — [TBD: filled by F03]
+## 注册与查找 — [filled by F03]
 
 所有错误码在 `app/core/errors.py` 中注册为集中式注册表。域模块抛出类型化异常；中间件层捕获并映射为结构化 API 响应。
 
-[TBD: filled by work orders F01, F03, F05, F11–F16, F20]
+[filled by F03, F05, F07; remaining: F08, F17]

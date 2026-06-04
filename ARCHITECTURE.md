@@ -226,6 +226,20 @@ LLM Gateway 统一收口 token 统计：每次调用自动记录 input_tokens / 
 
 ---
 
+## 10.5. Prompt 管理规则 [filled by F08]
+
+- Prompt 模板文件位于 `prompts/` 目录，运行时由 `PromptManager` 加载到内存缓存
+- 基准副本位于 `prompts/prompts_default/`，启动时自动补缺到 `prompts/`
+- 模板变量使用 `{{variable}}` 双花括号语法（Jinja 风格）
+- 修改 Prompt 内容写入 PG（`prompt_templates` + `prompt_template_versions` 表），不写 `.md` 文件
+- 版本管理：每次修改/回滚/重置均递增 version，所有历史版本保留
+- 重置操作：从 `prompts/prompts_default/` 读取基准内容覆盖当前版本
+- PromptManager 注册为 DI 单例，domain 服务通过 `PromptDomainService` 访问
+- API 端点（GET/PUT/POST /prompts）属于 F17，F08 仅实现服务层核心能力
+- 错误码：PROMPT_NOT_FOUND(9004)、PROMPT_PATH_INVALID(9005)、PROMPT_WRITE_FAILED(9006)
+
+---
+
 ## 11. Agent / Workflow 规则
 
 Agent 引擎和 Workflow 引擎独立于业务：

@@ -44,7 +44,7 @@
 
 | 日期 | F编号 | 评审人 | 结论 | 关键问题 |
 |------|-------|--------|------|---------|
-| 2026-06-02 | F01 | Agent | Accept | 12/12 pytest；check-architecture.sh 通过 |
+| 2026-06-02 | F01 | Agent | Accept | 13/13 pytest；check-architecture.sh 通过 |
 
 ## 工单级检查项模板
 

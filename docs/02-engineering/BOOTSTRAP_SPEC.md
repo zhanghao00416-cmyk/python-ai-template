@@ -76,10 +76,13 @@ app = FastAPI(lifespan=lifespan)
 
 ### 5. preload_prompts()
 
-- `PromptLoader` 实例加载所有 `prompts/**/*.md` 文件
+- `PromptManager` 实例加载所有 `prompts/**/*.md` 文件
 - 缓存到内存（`dict[str, str]`）
-- 后续调用 `prompt_loader.load(domain, name)` 直接从缓存返回
+- 后续调用 `prompt_manager.get_cached(name)` 直接从缓存返回
+- 支持按目录+名称或按叶名称查找
+- 支持模板变量渲染：`prompt_manager.render(name, variables)`
 - **无运行时热更**：改 prompt 文件后需重启进程
+- F08 实现：`app/services/prompt_manager.py`，DI 容器单例注册
 
 ### 6. init_model_gateways()
 

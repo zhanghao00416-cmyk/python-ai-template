@@ -19,12 +19,12 @@ if [ -z "$PYTHON" ]; then
 fi
 
 echo ""
-echo "[1/6] Checking Python environment..."
+echo "[1/7] Checking Python environment..."
 $PYTHON -c "import app; print('  OK: app module importable')" 2>/dev/null \
   || echo "  WARN: app module not importable (may need: pip install -e \".[dev]\")"
 
 echo ""
-echo "[2/6] Checking configuration..."
+echo "[2/7] Checking configuration..."
 $PYTHON -c "
 import yaml
 from pathlib import Path
@@ -38,7 +38,7 @@ else:
 " 2>/dev/null || echo "  WARN: Could not load config (install pyyaml)"
 
 echo ""
-echo "[3/6] Checking feature list..."
+echo "[3/7] Checking feature list..."
 $PYTHON -c "
 import json
 from pathlib import Path
@@ -56,22 +56,26 @@ else:
 "
 
 echo ""
-echo "[4/6] Running tests..."
+echo "[4/7] Running tests..."
 if [ -d "tests" ]; then
-    $PYTHON -m pytest tests/ -q --tb=no 2>/dev/null && echo "  OK: All tests passing" || echo "  WARN: Some tests failing (expected before implementation)"
+    $PYTHON -m pytest tests/ -q --tb=no 2>/dev/null && echo "  OK: All tests passing" || { echo "  FAIL: Some tests failing — fix before proceeding"; exit 1; }
 else
     echo "  INFO: No tests directory yet (will be created with F01)"
 fi
 
 echo ""
-echo "[5/6] Checking FACT_REGISTRY consistency..."
+echo "[5/7] Checking FACT_REGISTRY consistency..."
 $PYTHON scripts/check_fact_registry.py 2>/dev/null || echo "  WARN: Could not check FACT_REGISTRY consistency"
 
 echo ""
-echo "[6/6] Generating system-state.json..."
+echo "[6/7] Generating system-state.json..."
 $PYTHON scripts/update_system_state.py
 
 echo ""
-echo "=== Init Complete (6 steps) ==="
+echo "[7/7] Checking architecture dependencies..."
+bash scripts/check-architecture.sh
+
+echo ""
+echo "=== Init Complete (7 steps) ==="
 echo "Next step: Read AGENTS.md + feature_list.json + session-handoff.md"
 echo "Then: Open the work order file pointed by session-handoff.md Next pointer"

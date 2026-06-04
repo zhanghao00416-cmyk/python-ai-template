@@ -127,6 +127,35 @@ class QdrantSettings(BaseSettings):
     model_config = {"env_prefix": "QDRANT_"}
 
 
+class KnowledgeCollectionSettings(BaseSettings):
+    name: str = "general"
+    description: str = ""
+    vector_dim: int = 1024
+    distance: str = "Cosine"
+    sparse_vector: bool = True
+    default_chunk_size: int = 500
+    default_chunk_overlap: int = 50
+
+    model_config = {"env_prefix": "KNOWLEDGE_COLLECTION_"}
+
+
+class RetrievalSettings(BaseSettings):
+    default_top_k: int = 3
+    default_score_threshold: float = 0.5
+    enable_hybrid: bool = True
+    hybrid_alpha: float = 0.7
+    enable_rerank: bool = False
+
+    model_config = {"env_prefix": "RETRIEVAL_"}
+
+
+class KnowledgeSettings(BaseSettings):
+    collections: list[dict[str, Any]] = []
+    retrieval: RetrievalSettings = RetrievalSettings()
+
+    model_config = {"env_prefix": "KNOWLEDGE_"}
+
+
 class SecuritySettings(BaseSettings):
     enable_auth: bool = True
     api_key: str = ""
@@ -166,8 +195,7 @@ class SSESettings(BaseSettings):
 
 class ConcurrencySettings(BaseSettings):
     llm_semaphore_size: int = 20
-    vision_semaphore_size: int = 10
-    video_semaphore_size: int = 6
+    multimodal_semaphore_size: int = 10
     embedding_semaphore_size: int = 20
     semaphore_acquire_timeout: int = 120
 
@@ -195,11 +223,28 @@ class JsonRepairSettings(BaseSettings):
     model_config = {"env_prefix": "JSON_REPAIR_"}
 
 
+class TaskQueueSettings(BaseSettings):
+    redis_queue_name: str = "arq:tasks"
+    max_retries: int = 3
+    retry_delay: int = 60
+
+    model_config = {"env_prefix": "TASK_QUEUE_"}
+
+
+class ContextSettings(BaseSettings):
+    redis_cache_ttl: int = 3600
+    default_max_tokens: int = 4096
+    default_strategy: str = "recent_priority"
+
+    model_config = {"env_prefix": "CONTEXT_"}
+
+
 class Settings(BaseSettings):
     server: ServerSettings = ServerSettings()
     database: DatabaseSettings = DatabaseSettings()
     redis: RedisSettings = RedisSettings()
     qdrant: QdrantSettings = QdrantSettings()
+    knowledge: KnowledgeSettings = KnowledgeSettings()
     security: SecuritySettings = SecuritySettings()
     text_model: TextModelSettings = TextModelSettings()
     logging: LoggingSettings = LoggingSettings()
@@ -208,6 +253,8 @@ class Settings(BaseSettings):
     circuit_breaker: CircuitBreakerSettings = CircuitBreakerSettings()
     prompt_config: PromptConfigSettings = PromptConfigSettings()
     json_repair: JsonRepairSettings = JsonRepairSettings()
+    task_queue: TaskQueueSettings = TaskQueueSettings()
+    context: ContextSettings = ContextSettings()
 
     model_config = {"env_prefix": ""}
 

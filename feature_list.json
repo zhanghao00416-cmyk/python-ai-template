@@ -16,71 +16,71 @@
       "name": "数据库模型 + Alembic 迁移 + Redis 连接",
       "behavior": "PG 表创建成功，Redis ping 返回 pong，Alembic 迁移可执行",
       "verification": "pytest tests/test_02_database.py && alembic upgrade head",
-      "state": "in_progress",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "42 passed (29 unit + 13 F01), 9 skipped (integration tests need PG/Redis); architecture check 6/6 pass; init.ps1 7/7 pass; 6 ORM models (sessions/messages/tasks/agent_trajectories/prompt_templates/prompt_template_versions); BaseRepo CRUD + Pagination/PaginatedResult; RedisClient (ping/get/set/delete/incr); Alembic env + 001_initial_schema migration; 12xx error codes (1201/1202/1203 + InfraError); health_service.py with real DB/Redis/Qdrant checks via services layer"
     },
     {
       "id": "F03",
       "name": "错误体系 + 统一响应 + 中间件",
       "behavior": "错误请求返回结构化 JSON（含 code/message/request_id），trace_id 贯穿请求",
       "verification": "pytest tests/test_03_error_middleware.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "49 unit tests pass; init.ps1 7/7; architecture 6/6; ErrorCode registry with all domains (0xxx-9xxx + 11xx + 12xx); ERROR_HTTP_STATUS complete mapping; ERROR_DESCRIPTIONS registry; make_error() domain-aware factory; TraceMiddleware injects trace_id/request_id/user_id/session_id into contextvars + response headers; ExceptionMiddleware catches AppError→structured JSON, unhandled→AI_0001; middleware layer enforces no raw stack traces to client"
     },
     {
       "id": "F04",
       "name": "LLM Gateway（策略模式）",
       "behavior": "LLM 调用统一经 gateway，支持 qwen_cloud/vllm 双通道切换，stream/non-stream 统一方法",
       "verification": "pytest tests/test_04_llm_gateway.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "51 unit tests pass; init.ps1 7/7; architecture 6/6; CircuitBreaker 3-state (closed/open/half_open) with per-channel registry (llm_text/llm_vllm/multimodal/embedding); SemaphoreManager with named semaphores (llm/multimodal/embedding) and acquire timeout → AI_0004; LLMProvider ABC with generate/generate_stream; QwenCloudProvider and VLLMProvider with litellm; LLMRouter with models.yaml routing and fallback; LLMGateway with unified generate/generate_stream, circuit breaker fallback, and semaphore concurrency control; LLMRequest/LLMResponse/LLMChunk schemas; ConcurrencySettings field renamed vision_semaphore_size→multimodal_semaphore_size; bootstrap registers LLMGateway/CB/SemaphoreManager to DI; 11xx error codes used (1101 MODEL_TIMEOUT, 1102 LOCAL_MODEL_UNAVAILABLE, 1103 MODEL_FORMAT_ERROR, 1104 CLOUD_MODEL_ERROR)"
     },
     {
       "id": "F05",
       "name": "向量库抽象 + Qdrant 适配",
       "behavior": "多集合创建/删除，文档插入/检索/删除，混合检索（稠密+稀疏）",
       "verification": "pytest tests/test_05_vector_store.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "52 unit tests pass; init.ps1 7/7; architecture 6/6; VectorStoreBase ABC + QdrantVectorStore impl (multi-collection create/delete/exists/list, upsert, search/hybrid_search/search_by_strategy, delete_points/delete_by_filter, scroll_points, get_collection_info); CollectionConfig/PointInsert/SearchResult/PointPayload/RetrievalConfig schemas; KnowledgeSettings+RetrievalSettings config; build_query_filter+build_payload_index_params+get_distance utils; bootstrap _init_qdrant_collections auto-ensure; health_service async VectorStore; QDRANT_UNAVAILABLE(1202)+KB_VECTOR_WRITE_FAILED(6005) error codes; PERSISTENCE_LAYER.md+QDRANT_COLLECTION_CONFIG.md docs updated"
     },
     {
       "id": "F06",
       "name": "SSE 流式服务 + 心跳/断连",
       "behavior": "SSE 端点推送完整事件流（start/intent/chunk/citation/heartbeat/progress/usage/done/error）",
       "verification": "pytest tests/test_06_sse_stream.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "32 unit tests pass; init.ps1 7/7; architecture 6/6; SSEStreamService with 10 event types (start/intent/chunk/structured/citation/heartbeat/progress/usage/done/error) + safe_start_then_error + wrap_with_heartbeat; disconnect detection via is_disconnected callback (sync/async); error code uses format_error_code() for AI_xxxx; debug logging via settings.server.debug_sse_output; SSE_STREAM_SPEC.md updated to match implementation"
     },
     {
       "id": "F07",
       "name": "异步任务队列（ARQ）+ 统一任务查询",
       "behavior": "提交长任务返回 task_id，统一查询接口覆盖 Agent/Workflow/KB上传/自定义任务",
       "verification": "pytest tests/test_07_task_queue.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "47 unit tests pass; init.ps1 7/7; architecture 6/6; schemas (TaskCreateRequest/TaskStatusResponse/TaskType/TaskStatus); TaskRepo with create/get/update/list; TaskService with submit/get/update/list + status transition validation + enqueue failure handling; TaskQueueService with Redis LPUSH/BRPOP/HSET/HGETALL queue ops; API endpoints POST /api/v1/tasks + GET /api/v1/tasks/{task_id} + GET /api/v1/tasks; 9xxx error codes (TASK_NOT_FOUND/TASK_ALREADY_RUNNING/TASK_SUBMIT_FAILED); TaskQueueSettings config; callback_url column in TaskModel; deps.py bridge pattern for api→domain→services; PERSISTENCE_LAYER.md + DATA_MODEL.md + API_CONTRACT.md + ERROR_CODE.md updated"
     },
     {
       "id": "F08",
       "name": "Prompt 管理器 + 模板渲染 + 版本管理",
       "behavior": "查询/修改 prompt 文件，版本历史记录，回滚指定版本，重置基准副本，模板变量替换，启动时预加载",
       "verification": "pytest tests/test_08_prompt_manager.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "46 unit tests pass; init.ps1 7/7; architecture 6/6; PromptManager with seed_defaults/preload/get_cached/render/update_cache/list_cached/load_from_file/validate_name; PromptDomainService with get_template/list_templates/update_template(rollback)/get_versions/reset_template/render; PromptTemplateRepo + PromptTemplateVersionRepo with PG CRUD; extract_template_variables from {{var}}; schemas (PromptTemplateDetail/ListItem/UpdateRequest/UpdateResponse/VersionList/ResetResponse/RenderedPrompt); bootstrap integration (seed_prompt_defaults + preload_prompts + DI register); 9xxx error codes (PROMPT_NOT_FOUND/PROMPT_PATH_INVALID/PROMPT_WRITE_FAILED); prompts/prompts_default/ baseline copies; BOOTSTRAP_SPEC.md + DATA_MODEL.md + ARCHITECTURE.md updated"
     },
     {
       "id": "F09",
       "name": "上下文管理器（会话/消息/窗口截取）",
       "behavior": "创建 session → 追加 message → 获取上下文窗口（按 token 数截取）",
       "verification": "pytest tests/test_09_context_manager.py",
-      "state": "not_started",
-      "evidence": ""
+      "state": "passing",
+      "evidence": "57 unit tests pass; init.ps1 7/7; architecture 6/6; SessionRepo + MessageRepo (BaseRepo inheritance, CRUD + list); SessionService (create/get/list/delete/expire session, add/get/update message); ContextManager (count_tokens with tiktoken/fallback, 3 truncation strategies: recent_priority/summary/sliding_window, Redis cache with graceful degradation); ContextSettings config (redis_cache_ttl/default_max_tokens/default_strategy); schemas (SessionCreateRequest/SessionDetail/MessageCreateRequest/MessageDetail/ContextWindowResult); bootstrap DI registration; CONTEXT_MANAGEMENT_SPEC + DATA_MODEL + DOMAIN_MAP docs updated"
     },
     {
       "id": "F10",
       "name": "Tools 注册中心 + MCP 适配器 + Skills",
       "behavior": "注册 tool/skill → 通过 registry 调用 → MCP 协议返回结果 → skill 遮蔽 tool 互斥",
       "verification": "pytest tests/test_10_tools_registry.py",
-      "state": "not_started",
+      "state": "in_progress",
       "evidence": ""
     },
     {

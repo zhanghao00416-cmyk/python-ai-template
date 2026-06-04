@@ -1263,7 +1263,7 @@ Workflow 专用 SSE 事件：
 
 ---
 
-### Task Queue — [TBD: filled by F07]
+### Task Queue — [filled by F07]
 
 | Method | Path | Description |
 |--------|------|-------------|
