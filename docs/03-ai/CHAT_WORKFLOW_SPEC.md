@@ -4,7 +4,7 @@
 
 对话工作流（`app/domain/chat/`）管理会话、消息持久化、上下文窗口组装、LLM 交互以及 SSE 流式响应。它是核心的用户面向交互模式。
 
-## 对话请求流程 — [TBD: filled by F14]
+## 对话请求流程 — [filled by F14]
 
 ```
 POST /api/v1/chat (SSE)
@@ -26,7 +26,7 @@ ChatService (domain/chat/service.py)
 SSE 事件流推送至客户端
 ```
 
-## SSE 事件协议 — [TBD: filled by F06, F14]
+## SSE 事件协议 — [filled by F06, F14]
 
 对话端点返回一个 SSE 流，包含以下事件：
 
@@ -59,7 +59,7 @@ data: {"code": "AI_1001", "message": "Unauthorized"}
 5. `done` — LLM 生成完成时发送，包含 token 统计信息
 6. `error` — 发生任何错误时发送，随后关闭流
 
-## 会话生命周期 — [TBD: filled by F09, F14]
+## 会话生命周期 — [filled by F09, F14]
 
 会话在首次对话请求时自动创建。调用方生成 `session_id`（UUID）；如果该 ID 不存在，则自动创建新会话。
 
@@ -85,7 +85,7 @@ DELETE /api/v1/chat/sessions/{session_id}
 → { "code": 0, "message": "ok" }
 ```
 
-## 消息持久化 — [TBD: filled by F09, F14]
+## 消息持久化 — [filled by F09, F14]
 
 ### 添加用户消息
 
@@ -105,7 +105,7 @@ LLM 生成完成后：
 3. 如果使用了 RAG，则存储 `citations`
 4. 更新 `session.updated_at`
 
-## 上下文窗口组装 — [TBD: filled by F09, F14]
+## 上下文窗口组装 — [filled by F09, F14]
 
 调用 LLM 之前，对话服务组装上下文：
 
@@ -115,7 +115,7 @@ LLM 生成完成后：
 4. 合并：系统提示词 + 截断后的历史 + 用户消息
 5. 确保总 token 数 ≤ 模型上下文限制
 
-### 上下文窗口参数 — [TBD: filled by F14]
+### 上下文窗口参数 — [filled by F14]
 
 ```python
 class ChatContextConfig:
@@ -125,7 +125,7 @@ class ChatContextConfig:
     include_citations: bool = True
 ```
 
-## LLM 调用 — [TBD: filled by F04, F14]
+## LLM 调用 — [filled by F04, F14]
 
 - 使用 `LLMGateway.generate_stream()` 获取 SSE 响应
 - 任务类型：`"chat"`
@@ -133,7 +133,7 @@ class ChatContextConfig:
 - 并发：受 LLM 信号量管控
 - 超时：可按对话请求配置
 
-## 流式服务 — [TBD: filled by F06, F14]
+## 流式服务 — [filled by F06, F14]
 
 SSE 流由 `services/sse_stream/` 管理：
 
@@ -155,13 +155,13 @@ class SSEStreamService:
         """
 ```
 
-### 断开检测 — [TBD: filled by F06]
+### 断开检测 — [filled by F06]
 
 - 通过 asyncio 事件检测客户端断开
 - 断开时：取消 LLM 流，发送日志事件
 - 不允许遗留孤立的 LLM 调用
 
-## API 端点 — [TBD: filled by F14]
+## API 端点 — [filled by F14]
 
 | 方法 | 路径 | 描述 | 响应 |
 |------|------|------|------|
@@ -170,7 +170,7 @@ class SSEStreamService:
 | GET | /api/v1/chat/sessions/{id}/messages | 列出消息 | JSON |
 | DELETE | /api/v1/chat/sessions/{id} | 删除会话（软删除，级联） | JSON |
 
-## 错误码 — [TBD: filled by F14]
+## 错误码 — [filled by F14]
 
 使用 `docs/01-architecture/ERROR_CODE.md` 中的系统错误码：
 
@@ -179,4 +179,4 @@ class SSEStreamService:
 - `0005 VALIDATION_ERROR` — 无效请求
 - `1001 AUTH_INVALID_KEY` — 缺少/无效的 API 密钥
 
-[TBD: filled by work orders F04, F06, F09, F14]
+[filled by work orders F04, F06, F09, F14]

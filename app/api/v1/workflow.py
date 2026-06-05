@@ -10,7 +10,7 @@ Dependency: app/workflow/registry.py + app/workflow/engine.py (via DI)
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
@@ -47,9 +47,9 @@ async def run_workflow(request: WorkflowRunRequest):
     tid = trace_id_var.get() or ""
     task_id = str(uuid.uuid4())
 
+    from app.core.config import get_settings
     from app.workflow.engine import WorkflowEngine
     from app.workflow.registry import get_workflow_registry
-    from app.core.config import get_settings
 
     registry = get_workflow_registry()
     settings = get_settings()
@@ -57,11 +57,11 @@ async def run_workflow(request: WorkflowRunRequest):
         max_concurrent_nodes=settings.workflow.max_concurrent_nodes,
     )
 
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = datetime.now(UTC).isoformat()
 
     try:
         graph = registry.get(request.workflow_id)
-    except Exception as exc:
+    except Exception:
         err = make_error(
             ErrorCode.WORKFLOW_NODE_NOT_FOUND,
             f"Workflow '{request.workflow_id}' not found",
@@ -81,7 +81,7 @@ async def run_workflow(request: WorkflowRunRequest):
                 "nodes": [],
                 "total_duration_ms": 0.0,
                 "created_at": created_at,
-                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
                 "error": str(exc),
             }
             return error_response(exc, request_id=rid, trace_id=tid), error_to_status(exc)
@@ -103,7 +103,7 @@ async def run_workflow(request: WorkflowRunRequest):
 
     total_duration = sum(r.duration_ms for r in node_results)
     content = str(final_state.get("content", "")) if "content" in final_state else ""
-    completed_at = datetime.now(timezone.utc).isoformat()
+    completed_at = datetime.now(UTC).isoformat()
 
     # Determine overall status
     has_failed = any(r.status == "failed" for r in node_results)

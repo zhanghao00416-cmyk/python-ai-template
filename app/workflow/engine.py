@@ -11,15 +11,15 @@ from __future__ import annotations
 import asyncio
 import time
 from collections import deque
-from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 from app.core.errors import (
     ERROR_CODE_WORKFLOW_CYCLE_DETECTED,
     ERROR_CODE_WORKFLOW_EDGE_INVALID,
     ERROR_CODE_WORKFLOW_EXECUTION_FAILED,
     ERROR_CODE_WORKFLOW_NODE_NOT_FOUND,
-    ERROR_CODE_WORKFLOW_STATE_ERROR,
     make_error,
 )
 from app.core.logging import get_logger
@@ -103,14 +103,14 @@ class StateGraph:
 
     # -- builder API ---------------------------------------------------------
 
-    def add_node(self, name: str, fn: NodeFunction) -> "StateGraph":
+    def add_node(self, name: str, fn: NodeFunction) -> StateGraph:
         """Register a node function.  Returns *self* for chaining."""
         self._nodes[name] = fn
         if self.entry_point is None:
             self.entry_point = name
         return self
 
-    def add_edge(self, source: str, target: str) -> "StateGraph":
+    def add_edge(self, source: str, target: str) -> StateGraph:
         """Add an unconditional edge."""
         self._edges.append(Edge(source=source, target=target))
         return self
@@ -122,7 +122,7 @@ class StateGraph:
         paths: dict[str, str],
         *,
         default: str | None = None,
-    ) -> "StateGraph":
+    ) -> StateGraph:
         """Add a conditional edge from *source*."""
         self._conditional_edges.append(
             ConditionalEdge(
@@ -306,8 +306,9 @@ class WorkflowEngine:
 
         state: dict[str, Any] = dict(initial_state) if initial_state else {}
         node_results: list[NodeExecutionResult] = []
-        visited: set[str] = set()
-        resolved: set[str] = set()  # visited + skipped
+        visited: set[str] = set()      # nodes that have been executed
+        resolved: set[str] = set()     # visited + skipped
+        skipped: set[str] = set()      # nodes skipped due to conditional branch
 
         # Build adjacency + predecessor counts for execution
         all_nodes = set(graph._nodes)
@@ -341,7 +342,7 @@ class WorkflowEngine:
 
         while ready:
             node_name = ready.popleft()
-            if node_name in visited:
+            if node_name in visited or node_name in skipped:
                 continue
 
             # Check predecessors resolved
@@ -351,6 +352,35 @@ class WorkflowEngine:
             if not preds_resolved:
                 # Re-queue at end (wait for predecessors)
                 ready.append(node_name)
+                continue
+
+            # Check if this node should be skipped (unselected conditional branch)
+            # A node is skipped if ALL its conditional predecessors resolved
+            # but routed elsewhere.
+            is_skipped = self._is_skipped_branch(
+                node_name, resolved, skipped, fixed_adj, cond_map
+            )
+            if is_skipped:
+                skipped.add(node_name)
+                resolved.add(node_name)
+                node_results.append(
+                    NodeExecutionResult(name=node_name, status="skipped")
+                )
+                # Decrement in-degree of its successors so fan-in works
+                for succ in fixed_adj.get(node_name, []):
+                    remaining_in[succ] = max(0, remaining_in.get(succ, 1) - 1)
+                    if remaining_in[succ] == 0 and succ not in visited and succ not in skipped:
+                        ready.append(succ)
+                if node_name in cond_map:
+                    cedge = cond_map[node_name]
+                    for succ in cedge.paths.values():
+                        remaining_in[succ] = max(0, remaining_in.get(succ, 1) - 1)
+                        if remaining_in[succ] == 0 and succ not in visited and succ not in skipped:
+                            ready.append(succ)
+                    if cedge.default:
+                        remaining_in[cedge.default] = max(0, remaining_in.get(cedge.default, 1) - 1)
+                        if remaining_in[cedge.default] == 0 and cedge.default not in visited and cedge.default not in skipped:
+                            ready.append(cedge.default)
                 continue
 
             fn = graph._nodes[node_name]
@@ -367,21 +397,30 @@ class WorkflowEngine:
                 node_name, state, graph, fixed_adj, cond_map
             )
             for succ in successors:
-                if succ not in visited:
+                if succ not in visited and succ not in skipped:
                     remaining_in[succ] = max(0, remaining_in.get(succ, 1) - 1)
                     if remaining_in[succ] == 0:
                         ready.append(succ)
 
-            # Also mark skipped branches as resolved for fan-in
-            skipped = self._get_skipped_successors(
-                node_name, state, graph, cond_map, fixed_adj, all_nodes
-            )
-            for s in skipped:
-                if s not in resolved:
-                    resolved.add(s)
-                    remaining_in[s] = max(0, remaining_in.get(s, 1) - 1)
-                    if remaining_in[s] == 0 and s not in visited:
-                        ready.append(s)
+            # Mark unselected conditional branches as skipped
+            if node_name in cond_map:
+                cedge = cond_map[node_name]
+                selected = set(successors)
+                all_targets = set(cedge.paths.values())
+                if cedge.default:
+                    all_targets.add(cedge.default)
+                for target in all_targets - selected:
+                    if target not in skipped and target not in visited:
+                        skipped.add(target)
+                        resolved.add(target)
+                        node_results.append(
+                            NodeExecutionResult(name=target, status="skipped")
+                        )
+                        # Decrement their successors' in-degree
+                        for succ in fixed_adj.get(target, []):
+                            remaining_in[succ] = max(0, remaining_in.get(succ, 1) - 1)
+                            if remaining_in[succ] == 0 and succ not in visited and succ not in skipped:
+                                ready.append(succ)
 
         state["_node_results"] = [
             {
@@ -462,7 +501,7 @@ class WorkflowEngine:
                 raise make_error(
                     ERROR_CODE_WORKFLOW_EXECUTION_FAILED,
                     f"Condition function for '{source}' raised: {exc}",
-                )
+                ) from exc
             target = cedge.paths.get(route_key, cedge.default)
             if target is None:
                 raise make_error(
@@ -473,28 +512,39 @@ class WorkflowEngine:
 
         return result
 
-    def _get_skipped_successors(
+    def _is_skipped_branch(
         self,
-        source: str,
-        state: dict[str, Any],
-        graph: StateGraph,
-        cond_map: dict[str, ConditionalEdge],
+        node_name: str,
+        resolved: set[str],
+        skipped: set[str],
         fixed_adj: dict[str, list[str]],
-        all_nodes: set[str],
-    ) -> set[str]:
-        """For conditional edges, return the branch targets that were NOT taken."""
-        skipped: set[str] = set()
-        if source in cond_map:
-            cedge = cond_map[source]
-            try:
-                route_key = cedge.condition(state)
-            except Exception:
-                return skipped
-            taken = cedge.paths.get(route_key, cedge.default)
-            for key, target in cedge.paths.items():
-                if key != route_key and target != taken:
-                    skipped.add(target)
-        return skipped
+        cond_map: dict[str, ConditionalEdge],
+    ) -> bool:
+        """Check if *node_name* is an unselected branch of a conditional edge.
+
+        A node is a skipped branch if:
+        - It is a target of a conditional edge from some predecessor
+        - That predecessor has been resolved
+        - The node itself is already marked as skipped
+        """
+        if node_name in skipped:
+            return True
+
+        # Check conditional predecessors: if a resolved predecessor has a
+        # conditional edge that includes this node as a target, but the
+        # predecessor has already executed and this node was marked skipped
+        # at that time, then it's skipped.
+        # Since we mark skipped immediately after routing, this check is
+        # mainly for nodes that get enqueued before the skip marking happens.
+        for src, cedge in cond_map.items():
+            if src not in resolved:
+                continue
+            all_targets = set(cedge.paths.values())
+            if cedge.default:
+                all_targets.add(cedge.default)
+            if node_name in all_targets and node_name in skipped:
+                return True
+        return False
 
     def _check_predecessors(
         self,

@@ -23,8 +23,6 @@
 
 **主 API 选型**：实现业务域前必读 `API_CONTRACT.md` 内「API 选型决策表」，避免 `/run` 与 `/chat`/`/kb/query` 职责混用。
 
-**外部参考**：子目录 `TestNewHarness/`（T0 产品）见 `DEPENDENCY_MAP.md` 表 3；阶段 1 只读对照，阶段 2 按本仓 docs 重写。
-
 ---
 
 ## 修改已有功能

@@ -30,7 +30,7 @@ services:
       retries: 5
 
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.8.0
     ports:
       - "6333:6333"
       - "6334:6334"
@@ -38,6 +38,11 @@ services:
       - qdrant_data:/qdrant/storage
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/healthz || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
@@ -55,10 +60,16 @@ services:
       redis:
         condition: service_healthy
       qdrant:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:6006/api/v1/health')\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     volumes:
-      - ./configs:/app/configs
-      - ./prompts:/app/prompts
+      - ./configs:/app/configs:ro
+      - ./prompts:/app/prompts:ro
       - ./secrets:/run/secrets:ro
 
 volumes:

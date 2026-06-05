@@ -8,9 +8,9 @@
 |------|-----|
 | **current_phase** | `implement` |
 | **build_mode** | `greenfield` |
-| **last_updated** | 2026-06-04 |
-| **last_ticket** | 工单 F12 多 Agent 协作 Orchestrator 模式 |
-| **last_verified** | pytest 553 passed, 9 skipped; 架构合规 6/6 |
+| **last_updated** | 2026-06-05 |
+| **last_ticket** | 工单 F21 端到端联调+Docker+生产就绪 |
+| **last_verified** | pytest tests/ 817 passed 10 skipped; F21 deployment implemented; Dockerfile multi-stage + non-root + HEALTHCHECK; docker-compose 4 services with healthchecks; init.ps1 7/7; architecture 6/6
 | **task_mode** | `linear` |
 
 ## 阶段说明
@@ -35,10 +35,10 @@
 
 | 字段 | 值 |
 |------|-----|
-| **active_feature_id** | `F13` |
-| **active_ticket** | `工单/F13_workflow_dag_engine.md` |
-| **status** | `not_started` |
-| **goal** | 工单 F13 阶段 1：只读，读 WORKFLOW_SPEC / 前序代码，禁止写代码 |
+| **active_feature_id** | `—` |
+| **active_ticket** | `—` |
+| **status** | `all_passing` |
+| **goal** | F01-F21 全部 passing。项目进入 maintain 阶段。如需新增功能，请走变更流程。 |
 
 ## 已验证（可信任）
 
@@ -67,6 +67,17 @@
 - [x] `F10`：Tools 注册中心 + MCP 适配器 + Skills（64 unit tests, architecture 6/6）
 - [x] `F11`：Agent 基类 + 状态机 + ReAct 循环（64 unit tests, architecture 6/6）
 - [x] `F12`：多 Agent 协作 Orchestrator 模式（49 unit tests, 全量 553 passed, architecture 6/6）
+- [x] `F13`：Workflow DAG 引擎（54 unit tests, 全量 607 passed, 9 skipped, architecture 6/6）
+- [x] `F14`：Chat 对话域（16 测试通过，全量 623 passed, 9 skipped, architecture 6/6）
+- [x] `F15a`：知识库集合+文档管理（40 测试通过，全量 663 passed, 9 skipped, architecture 6/6）
+- [x] `F15b`：知识库RAG查询（14 测试通过，全量 677 passed, 9 skipped, architecture 6/6）
+- [x] `F15c`：知识库端到端联调（4 测试通过，全量 681 passed, 9 skipped, architecture 6/6）
+- [x] `F16`：意图识别域（28 测试通过，全量 709 passed, 9 skipped, architecture 6/6）
+- [x] `F17`：Prompt 管理 API（14 测试通过，全量 723 passed, 9 skipped, architecture 6/6）
+- [x] `F18`：可观测性体系（11 测试通过，全量 734 passed, 9 skipped, architecture 6/6）
+- [x] `F19`：评估框架（46 测试通过，全量 780 passed, 9 skipped, architecture 6/6）
+- [x] `F20`：认证+限流中间件（11 测试通过，1 skipped；架构合规 6/6；ruff check 通过）
+- [x] `F21`：端到端联调+Docker+生产就绪（26 测试通过；多阶段 Dockerfile + compose 4 服务 + healthcheck 链 + LLM 状态；架构合规 6/6）
 
 ## 阻塞项
 
@@ -82,11 +93,123 @@
 
 ## 下一步（优先级）
 
-1. 新 Chat 发送 `session-handoff.md` 中的下一会话开场白。
-2. 执行工单 **F13** 阶段 1→2→3（`feature_list.json` 中 F13 为唯一 `in_progress`）。
-3. 工单顺序：F13 → … → F21（F01-F12 已 passing）。
+1. F01-F21 全部 passing，项目进入 **maintain** 阶段。
+2. 如需新增功能：走变更流程（`docs/00-meta/CHANGE_WORKFLOW.md`）。
+3. 如需修复 bug：走 hotfix 流程。
 
 ## 会话历史摘要
+
+### 2026-06-05（F21 实现）
+
+- **F21 阶段 1→2→3 完成**
+- 阶段 1：读 DEPLOYMENT_GUIDE / API_CONTRACT / ARCHITECTURE / DEPENDENCY_MAP / F21 工单 + 前序代码（F01-F20 全部）
+- 阶段 1 交付物：差异清单（Dockerfile 需多阶段+非 root/compose 需 app healthcheck/health 需 LLM 状态/DEPLOYMENT_GUIDE 全篇 TBD）、错误码无新增、预计文件清单（5 修改 + 1 新增测试 + 1 文档回填）、不做范围确认（不改业务代码/不走变更单）
+- 阶段 2 实现文件：
+  - `Dockerfile`：多阶段构建（builder+runtime）、非 root 用户（appuser:appgroup）、HEALTHCHECK 指令（curl `/api/v1/health`）
+  - `docker-compose.yml`：app 服务 healthcheck + depends_on conditions（service_healthy/service_started）+ 只读 volumes（configs/prompts/secrets:ro）+ qdrant 版本锁定 v1.8.0
+  - `app/services/health_service.py`：新增 `check_llm()` 返回熔断器状态（qwen_cloud/vllm channels）
+  - `app/api/v1/health.py`：响应包含 `dependencies.llm`（channels + status）
+  - `tests/test_f21_deployment.py`：26 项测试（Dockerfile 5 项/compose 6 项/env 4 项/health 5 项/生产就绪 6 项）
+  - `docs/02-engineering/DEPLOYMENT_GUIDE.md`：8 处 `[TBD: filled by F21]` → `[filled by F21]`
+- 阶段 3：evaluator-rubric.md F21 Accept；feature_list.json F21→passing（全部 22/22 passing）；progress.md 更新（active→全部完成，进入 maintain）；session-handoff.md 更新；init.ps1 7/7 通过；817 total tests pass
+
+### 2026-06-05（F20 实现）
+
+- **F20 阶段 1→2→3 完成**
+- 阶段 1：读 API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / SECURITY_POLICY / F20 工单 + 前序代码（F02 redis_client.py + F03 middleware）
+- 阶段 1 交付物：差异清单（RedisClient 缺 expire/配置缺限流段/中间件顺序需调整/错误码已预定义但 docs 未同步/无 API surface 新增）、错误码与边界条件（1001/1004/0006）、预计文件清单（8 新增/修改）、不做范围确认、TestNewHarness 无对照素材
+- 阶段 2 实现文件：
+  - `app/infra/redis_client.py`：新增 `expire(key, seconds)` 方法
+  - `app/core/config.py`：新增 `RateLimitSettings` + `RateLimitEndpointSettings` 类，挂入 `Settings`
+  - `configs/default.yaml`：新增 `rate_limit` 配置段（enabled/default/endpoints/exempt_paths）
+  - `app/middleware/auth.py`：API Key 认证中间件（X-API-Key 校验、enable_auth=false 绕过、豁免路径、request.state.user_id 设置、401 code 1001）
+  - `app/middleware/rate_limit.py`：Redis 滑动窗口限流中间件（INCR+EXPIRE、端点覆盖、IP/Key 双标识、429 响应含 Retry-After/X-RateLimit-* 头、Redis 不可用降级）
+  - `app/middleware/__init__.py`：导出 auth_middleware + rate_limit_middleware
+  - `app/main.py`：调整中间件注册顺序（TraceMiddleware → auth → rate_limit → exception → metrics）
+  - `tests/test_20_auth_ratelimit.py`：12 项测试（auth：缺失/无效/禁用/豁免；rate_limit：低于限制/超过限制/IP 标识/禁用/Redis 降级/豁免；E2E：health/metrics 豁免）
+- 阶段 3：evaluator-rubric.md F20 Accept；ERROR_CODE.md + SECURITY_POLICY.md TBD→filled by F20；feature_list.json F20→passing + F21→in_progress；progress.md 更新（active→F21）；session-handoff.md 更新
+
+### 2026-06-05（F19 实现）
+
+- **F19 阶段 1→2→3 完成**
+- 阶段 1：读 API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F19 工单 + 前序代码（F11 base.py/state.py/trajectory.py/react.py/orchestrator.py, F13 workflow engine/registry, domain agent_orchestration service/repo, schemas agent/workflow）
+- 阶段 2 实现文件：
+  - `app/schemas/eval.py`：EvalDimension/EvalGrade/EvalScore/TrajectoryEvalResult/DialogueQualityResult/EvalReport
+  - `app/eval/metrics.py`：对话质量指标（response_relevance/response_conciseness/citation_accuracy/dialogue_turn_balance）+ CJK 字符支持
+  - `app/eval/trajectory_eval.py`：轨迹评测（state_transition_validity/tool_call_success_rate/loop_detection/step_efficiency/trajectory_completeness）+ tool failure 通过 OBSERVING 步骤查找
+  - `app/eval/runner.py`：EvalRunner（run_trajectory_eval/run_dialogue_eval/run_batch）+ _to_grade 分级映射
+  - `app/eval/__init__.py`：包导出 EvalRunner + 所有指标函数
+  - `tests/test_19_eval.py`：46 项测试（对话质量 4 维度/轨迹 5 维度/runner 批量/边界条件）
+- 阶段 3：evaluator-rubric.md F19 Accept；feature_list.json F19→passing + F20→in_progress；progress.md 更新（active→F20）；session-handoff.md 更新
+
+### 2026-06-05（F18 实现）
+
+- **F18 阶段 1→2→3 完成**
+- 阶段 1：读 API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F18 工单 + 前序代码（F03 logging/tracing + F04 gateway）
+- 阶段 2 实现文件：
+  - `app/core/metrics.py`：Prometheus Registry + 10 项指标定义（llm_request_total/llm_request_duration_seconds/llm_tokens_total/llm_circuit_breaker_state/http_request_total/http_request_duration_seconds/kb_document_count/kb_query_duration_seconds/agent_step_total/agent_step_duration_seconds）+ 6 个 record_* helper + get_metrics_response()
+  - `app/middleware/metrics.py`：HTTP 指标中间件，记录请求计数 + 延迟
+  - `app/api/v1/metrics.py`：GET /metrics 路由，返回 Prometheus 文本格式
+  - `app/main.py`：注册 metrics_router 和 metrics_middleware
+  - `app/services/llm/gateway.py`：generate/generate_stream 注入 llm_request_total/llm_request_duration_seconds/llm_tokens_total/llm_circuit_breaker_state 指标 + 结构化日志含 duration/token_usage
+  - `app/infra/vector_store/qdrant_store.py`：search/hybrid_search/_sparse_search 注入 kb_query_duration_seconds；get_collection_info 注入 kb_document_count
+  - `app/agent/base.py` + `app/agent/react.py`：ReAct 循环每步注入 agent_step_total + agent_step_duration_seconds
+  - `tests/test_18_observability.py`：11 项测试（/metrics 端点/10 项指标存在性/HTTP 请求记录/LLM generate+stream+失败/KB 查询+文档数/Agent 步数/无 prometheus 降级）
+- 阶段 3：feature_list.json F18→passing + F19→in_progress；progress.md 更新；session-handoff.md 更新；API_CONTRACT.md TBD→filled by F18
+
+### 2026-06-05（F16 实现）
+
+- **F16 阶段 1→2→3 完成**
+- 阶段 1：读 API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F16 工单 + 前序代码（F04 LLM Gateway + F08 PromptManager）
+- 阶段 2 实现文件：
+  - `app/schemas/intent.py`：IntentRequest/IntentResponse/IntentResultData/SubIntent/RoutingInfo
+  - `app/domain/intent/service.py`：IntentDomainService（三层漏斗 L1 keyword → L2 similarity → L3 LLM）+ KeywordMatcher + SimilarityMatcher + LLMClassifier；多意图检测 + query 重组；降级策略（chat fallback）
+  - `app/api/v1/intent.py`：POST /api/v1/intent 路由
+  - `prompts/intent/classify.md`：LLM 分类 prompt 模板
+  - `configs/default.yaml`：追加 intent 配置段（keyword rules / similarity representatives / llm / multi_intent）
+  - `app/core/config.py`：Settings 新增 `intent: dict[str, Any]` 字段
+  - `app/main.py`：注册 intent_router
+  - `tests/test_16_intent.py`：28 项测试（L1/L2/L3/多意图/降级/边界/API）
+- 阶段 3：INTENT_ROUTING_SPEC.md + API_CONTRACT.md TBD→filled；evaluator-rubric.md F16 Accept；feature_list.json F16→passing + F17→in_progress；progress.md 更新；session-handoff.md 更新
+
+### 2026-06-05（F17 实现）
+
+- **F17 阶段 1→2→3 完成**
+- 阶段 1：读 API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F17 工单 + 前序代码（F08 Prompt 管理器全部实现）
+- 阶段 2 实现文件：
+  - `app/api/v1/prompt.py`：Prompt 管理 API 路由（GET /api/v1/prompts 列表/详情, PUT /api/v1/prompts/{name} 修改/回滚, GET /api/v1/prompts/{name}/versions 版本历史, POST /api/v1/prompts/{name}/reset 重置基准）
+  - `app/main.py`：注册 prompt_router
+  - `tests/test_17_prompt_admin.py`：14 项测试（列表/详情/修改/回滚/版本历史/重置/错误/API 路由）
+- 阶段 3：API_CONTRACT.md TBD→filled；evaluator-rubric.md F17 Accept；feature_list.json F17→passing + F18→in_progress；progress.md 更新；session-handoff.md 更新
+
+### 2026-06-05（F15c 实现）
+
+- **F15c 阶段 1→2→3 完成**
+- 阶段 1：读 API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F15c 工单 + 前序代码（F15a + F15b 全部实现）
+- 阶段 2 实现文件：
+  - `tests/test_15c_knowledge_e2e.py`：4 项 E2E 测试
+    - `test_e2e_full_lifecycle_happy_path`：service 层全流程（create_collection→ingest_document→query_rag/sync+stream→list_documents→preview_delete→delete_documents→delete_collection）
+    - `test_e2e_query_empty_collection`：空集合 RAG 查询返回无结果提示
+    - `test_api_e2e_full_lifecycle`：API 层全流程（POST/GET/DELETE collections + POST/GET/DELETE documents + POST query sync+stream）
+    - `test_api_e2e_query_error`：RAG_RETRIEVAL_FAILED 错误处理验证
+- 阶段 3：feature_list.json F15c→passing + F16→in_progress；progress.md 更新；session-handoff.md 更新
+
+### 2026-06-04（F13 实现）
+
+- **F13 阶段 1→2→3 完成**
+- 阶段 1：读 WORKFLOW_SPEC / API_CONTRACT / ERROR_CODE / ARCHITECTURE / DEPENDENCY_MAP / F13 工单 + 前序代码（config/bootstrap）
+- 阶段 2 实现文件：
+  - `app/workflow/engine.py`：StateGraph + Edge + ConditionalEdge + NodeExecutionResult + WorkflowEngine（Kahn 拓扑排序、条件分支路由、并行执行、循环检测）
+  - `app/workflow/registry.py`：WorkflowRegistry（register/register_from_yaml/get/match/list_workflows）+ YAML 加载
+  - `app/workflow/__init__.py`：包导出
+  - `app/schemas/workflow.py`：WorkflowNodeStatus/WorkflowStatus StrEnum + WorkflowRunRequest/WorkflowNodeResult/WorkflowRunResponse/WorkflowStatusDetail
+  - `app/core/config.py`：WorkflowSettings
+  - `app/api/v1/workflow.py`：POST /api/v1/workflow/run + GET /api/v1/workflow/runs/{task_id}
+  - `app/api/deps.py`：get_workflow_registry 工厂
+  - `app/main.py`：注册 workflow_router
+  - `app/bootstrap.py`：WorkflowRegistry DI 注册 + YAML 自动加载
+  - `tests/test_13_workflow.py`：54 项测试
+- 阶段 3：WORKFLOW_SPEC.md 3 处 TBD→filled；evaluator-rubric.md F13 Accept；feature_list.json F13→passing + F14→in_progress
 
 ### 2026-06-04（F12 实现）
 

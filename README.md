@@ -41,7 +41,6 @@ python-ai-template/
 ├── docs/                # 契约与规范（事实来源）
 ├── 工单/                # F01–F21 实现工单
 ├── tests/               # 按 feature 编号
-├── TestNewHarness/      # 本地参考老项目（默认 .gitignore，可选）
 └── 使用手册.md          # 人类使用说明
 ```
 

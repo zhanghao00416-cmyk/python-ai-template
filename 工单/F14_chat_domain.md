@@ -53,14 +53,6 @@
 2. 错误码与边界条件（引用 ERROR_CODE 表号）
 3. 预计新增/修改文件清单（可与 §2.2 对照，允许阶段 1 微调）
 4. 明确「不做」范围确认
-5. （可选）`TestNewHarness/` 对照差异表 — 见 `docs/00-meta/DEPENDENCY_MAP.md` 表 3
-
-### 1.4 可选外部参考（TestNewHarness）
-
-- 路径：`TestNewHarness/`（本仓库子目录，**非** Python 依赖）
-- 索引：`docs/00-meta/DEPENDENCY_MAP.md` **表 3**（工单 → 老项目只读路径）
-- **阶段 1**：只读；**阶段 2**：按差异表重写，**禁止**整文件复制
-
 **阶段 1 通过后才可进入阶段 2。**
 
 ---

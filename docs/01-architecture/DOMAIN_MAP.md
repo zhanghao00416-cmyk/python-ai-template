@@ -33,7 +33,7 @@ domain ← agent/workflow (域编排是调用者)
 | 数据模型 | `sessions`, `messages` |
 | 工单 | F09（服务层）, F14（API 层） |
 
-### chat — [TBD: filled by F14]
+### chat — [filled by F14]
 
 | 方面 | 详情 |
 |------|------|
@@ -45,7 +45,7 @@ domain ← agent/workflow (域编排是调用者)
 | 数据模型 | `sessions`, `messages` |
 | 工单 | F14 |
 
-### knowledge — [TBD: filled by F05, F15a/F15b/F15c]
+### knowledge — [filled by F05, F15a/F15b/F15c]
 
 | 方面 | 详情 |
 |------|------|
@@ -57,7 +57,7 @@ domain ← agent/workflow (域编排是调用者)
 | 数据模型 | Qdrant collections, document metadata |
 | 工单 | F05, F15a, F15b, F15c |
 
-### intent — [TBD: filled by F16]
+### intent — [filled by F16]
 
 | 方面 | 详情 |
 |------|------|
@@ -69,7 +69,7 @@ domain ← agent/workflow (域编排是调用者)
 | 数据模型 | None（无状态分类） |
 | 工单 | F16 |
 
-### prompt_admin — [TBD: filled by F08, F17]
+### prompt_admin — [filled by F08, F17]
 
 | 方面 | 详情 |
 |------|------|
@@ -81,7 +81,7 @@ domain ← agent/workflow (域编排是调用者)
 | 数据模型 | `prompt_templates`, `prompt_template_versions` |
 | 工单 | F08, F17 |
 
-### agent_orchestration — [TBD: filled by F11, F12]
+### agent_orchestration — [filled by F11, F12]
 
 | 方面 | 详情 |
 |------|------|
@@ -93,7 +93,7 @@ domain ← agent/workflow (域编排是调用者)
 | 数据模型 | `agent_trajectories` |
 | 工单 | F11, F12 |
 
-### workflow_orchestration — [TBD: filled by F13]
+### workflow_orchestration — [filled by F13]
 
 | 方面 | 详情 |
 |------|------|
@@ -127,4 +127,4 @@ domain ← agent/workflow (域编排是调用者)
 | Prompt Manager | `services/prompt_manager/` | 所有域 |
 | Task Queue | `services/task_queue/` | `workflow_orchestration` |
 
-[TBD: filled by work orders F05, F08, F09, F11–F17]
+[filled by work orders F05, F08, F09, F11–F17]

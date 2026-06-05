@@ -47,6 +47,16 @@
 | 2026-06-02 | F01 | Agent | Accept | 13/13 pytest；check-architecture.sh 通过 |
 | 2026-06-04 | F11 | Agent | Accept | 64/64 pytest；全量 504 passed；架构合规测试通过 |
 | 2026-06-04 | F12 | Agent | Accept | 49/49 pytest；全量 553 passed；架构合规 6/6；OrchestratorAgent plan/delegate/synthesize 完整；轨迹记录完整 |
+| 2026-06-04 | F13 | Agent | Accept | 54/54 pytest；全量 607 passed, 9 skipped；架构合规 6/6；StateGraph DAG 执行+条件边路由+Kahn 拓扑排序；YAML 注册表；API 端点 2 个；ruff 全通过 |
+| 2026-06-05 | F14 | Agent | Accept | 16/16 pytest；全量 623 passed, 9 skipped；架构合规 6/6；SSE 流完整（start→chunk→usage→done）；自动创建会话；同步/流式双模式；上下文窗口自动截取；消息持久化 |
+| 2026-06-05 | F15a | Agent | Accept | 40/40 pytest；全量 663 passed, 9 skipped；架构合规 6/6；4 种分块策略 + 父子分块；3 元数据；异步上传返回 task_id；两步确认删除；6xxx 错误码；API 端点 6 个；deps.py delayed import 合规 |
+| 2026-06-05 | F15b | Agent | Accept | 14/14 pytest；全量 677 passed, 9 skipped；架构合规 6/6；4 种召回策略（keyword/similarity/hybrid/rrf）；rerank 关键词 boost；父子上下文返回；SSE/同步双模式；citation 去重；3xxx 错误码；API 端点 /kb/query；prompts/rag 模板；RAG_PIPELINE_SPEC.md TBDs filled |
+| 2026-06-05 | F16 | Agent | Accept | 28/28 pytest；全量 709 passed, 9 skipped；架构合规 6/6；三层意图漏斗（keyword/similarity/llm）短路生效；多意图检测+query重组；降级策略（chat fallback）；2xxx 错误码；API 端点 /api/v1/intent；prompts/intent/classify.md；INTENT_ROUTING_SPEC.md TBDs filled |
+| 2026-06-05 | F17 | Agent | Accept | 14/14 pytest；全量 723 passed, 9 skipped；架构合规 6/6；Prompt 管理 API 4 端点（GET/PUT /api/v1/prompts, GET /api/v1/prompts/{name}/versions, POST /api/v1/prompts/{name}/reset）；列表分页过滤+精确匹配返回详情；修改/回滚互斥校验；版本历史；重置基准；9xxx 错误码；复用 F08 服务层（PromptDomainService+Repo+PromptManager）；API_CONTRACT.md TBD filled by F17 |
+| 2026-06-05 | F18 | Agent | Accept | 11/11 pytest；全量 734 passed, 9 skipped；架构合规 6/6；10 项 Prometheus 指标全部暴露（LLM/HTTP/KB/Agent）；LLM gateway 自动记录 token+latency；HTTP middleware 记录请求计数+延迟；KB search 记录查询延迟+文档数；Agent ReAct 记录步数+延迟；/metrics 端点返回 Prometheus 文本；无 prometheus_client 时优雅降级；API_CONTRACT.md TBD filled by F18 |
+| 2026-06-05 | F19 | Agent | Accept | 46/46 pytest；全量 780 passed, 9 skipped；架构合规 6/6；5 轨迹维度（state_transition_validity/tool_call_success_rate/loop_detection/step_efficiency/trajectory_completeness）+ 4 对话质量指标（relevance/conciseness/citation/turn_balance）；EvalRunner 批量评估；CJK 字符支持；tool failure 通过 OBSERVING 步骤检测；空数据优雅降级；无 REST API（纯内部服务）；未修改 passing 代码 |
+| 2026-06-05 | F20 | Agent | Accept | 11/11 pytest (1 skipped)；架构合规 6/6；ruff check 通过；auth middleware (X-API-Key 校验/enable_auth=false 绕过/豁免路径/401 code 1001)；rate_limit middleware (Redis INCR+EXPIRE/端点覆盖/IP+Key 双标识/429 含 Retry-After/X-RateLimit-* 头/Redis 降级)；RedisClient.expire() 新增；RateLimitSettings 配置类；default.yaml rate_limit 段；ERROR_CODE.md + SECURITY_POLICY.md TBD→filled；未修改 passing 代码 |
+| 2026-06-05 | F21 | Agent | Accept | 26/26 pytest；架构合规 6/6；ruff check 通过；Dockerfile 多阶段构建（builder+runtime）+ 非 root 用户 + HEALTHCHECK；docker-compose.yml 4 服务（postgres/redis/qdrant/app）+ app healthcheck + depends_on conditions + 只读 volumes；health_service.py 新增 check_llm() 返回熔断器状态；health.py 响应含 dependencies.llm.channels；DEPLOYMENT_GUIDE.md 8 处 TBD→filled；.env.example 完整；feature_list.json 全部 22/22 passing；init.ps1 7/7；817 total tests pass；项目进入 maintain 阶段 |
 
 ## 工单级检查项模板
 

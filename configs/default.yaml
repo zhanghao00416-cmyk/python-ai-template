@@ -20,6 +20,22 @@ security:
   jwt_algorithm: "HS256"
   max_body_size: 10485760
 
+rate_limit:
+  enabled: true
+  default:
+    requests: 100
+    window_seconds: 60
+  endpoints:
+    /api/v1/chat:
+      requests: 30
+      window_seconds: 60
+    /api/v1/kb/query:
+      requests: 50
+      window_seconds: 60
+  exempt_paths:
+    - "/api/v1/health"
+    - "/metrics"
+
 logging:
   level: "INFO"
   format: "json"
@@ -157,6 +173,39 @@ circuit_breaker:
 prompt_config:
   prompts_dir: "./prompts"
   prompts_default_dir: "./prompts/prompts_default"
+
+intent:
+  layers:
+    keyword:
+      enabled: true
+      rules:
+        - intent: qa
+          keywords: ["什么是", "怎么用", "如何", "解释"]
+        - intent: task
+          keywords: ["帮我", "执行", "创建", "删除"]
+        - intent: chat
+          keywords: ["你好", "闲聊", "聊聊"]
+        - intent: retrieve_only
+          keywords: ["搜索", "查找", "检索"]
+      confidence_threshold: 0.9
+    similarity:
+      enabled: true
+      top_k: 3
+      score_threshold: 0.85
+      representatives:
+        qa: "知识问答，解释概念，如何使用"
+        task: "执行任务，帮我做某事，创建或删除"
+        chat: "闲聊，打招呼，日常对话"
+        retrieve_only: "搜索文档，查找信息，检索资料"
+    llm:
+      enabled: true
+      model_routing: intent
+  multi_intent:
+    enabled: true
+    max_intents: 3
+  fallback_intent: chat
+  max_input_length: 1000
+  timeout: 5.0
 
 json_repair:
   enabled: true

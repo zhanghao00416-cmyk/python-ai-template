@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
@@ -13,7 +13,7 @@ _CONFIG_DIR = ROOT_DIR / "configs"
 _ENV_FILE = ROOT_DIR / ".env"
 _SECRETS_DIR = Path("/run/secrets")
 
-# Flat env keys and legacy TestNewHarness-style keys → dotted yaml path
+# Flat env keys and legacy-style keys → dotted yaml path
 _ENV_TO_YAML: dict[str, str] = {
     "DATABASE_URL": "database.url",
     "REDIS_URL": "redis.url",
@@ -166,6 +166,20 @@ class SecuritySettings(BaseSettings):
     model_config = {"env_prefix": "SECURITY_"}
 
 
+class RateLimitEndpointSettings(BaseSettings):
+    requests: int = 100
+    window_seconds: int = 60
+
+
+class RateLimitSettings(BaseSettings):
+    enabled: bool = True
+    default: RateLimitEndpointSettings = RateLimitEndpointSettings()
+    endpoints: dict[str, RateLimitEndpointSettings] = {}
+    exempt_paths: list[str] = ["/api/v1/health", "/metrics"]
+
+    model_config = {"env_prefix": "RATE_LIMIT_"}
+
+
 class TextModelSettings(BaseSettings):
     text_model_provider: str = "qwen_cloud"
     qwen_api_base: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -262,7 +276,10 @@ class Settings(BaseSettings):
     task_queue: TaskQueueSettings = TaskQueueSettings()
     context: ContextSettings = ContextSettings()
     workflow: WorkflowSettings = WorkflowSettings()
+    rate_limit: RateLimitSettings = RateLimitSettings()
+    embedding: dict[str, Any] = Field(default_factory=dict)
     mcp_servers: list[dict[str, Any]] = []
+    intent: dict[str, Any] = Field(default_factory=dict)
 
     model_config = {"env_prefix": ""}
 
@@ -295,7 +312,7 @@ def _collect_env_overrides() -> dict[str, str]:
 
 
 def _apply_secrets_to_merged(merged: dict[str, Any]) -> None:
-    """Highest priority: /run/secrets files (same names as TestNewHarness)."""
+    """Highest priority: /run/secrets files."""
     secret_map: list[tuple[str, str, str]] = [
         ("qwen_api_key", "text_model", "qwen_api_key"),
         ("api_key", "security", "api_key"),
@@ -341,6 +358,13 @@ def _apply_yaml_to_settings(settings: Settings, cfg: dict[str, Any]) -> None:
             continue
         section = getattr(settings, section_name, None)
         if section is None:
+            continue
+        # Support free-form dict sections (e.g. embedding) directly.
+        if isinstance(section, dict):
+            merged = dict(section)
+            for key, value in section_data.items():
+                merged[key] = value
+            setattr(settings, section_name, merged)
             continue
         payload = section.model_dump()
         for key, value in section_data.items():

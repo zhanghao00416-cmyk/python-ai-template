@@ -7,8 +7,11 @@ import structlog
 from qdrant_client import models
 from qdrant_client.async_qdrant_client import AsyncQdrantClient
 
+import time
+
 from app.core.config import get_settings
 from app.core.errors import AppError, ErrorCode, InfraError, make_error
+from app.core.metrics import record_kb_query, record_kb_document_count
 from app.infra.vector_store.base import VectorStoreBase
 from app.infra.vector_store.utils import (
     build_payload_index_params,
@@ -213,11 +216,13 @@ class QdrantVectorStore(VectorStoreBase):
                 client.get_collection(name),
                 timeout=float(self._timeout),
             )
+            points_count = info.points_count
+            record_kb_document_count(collection=name, count=points_count)
             return {
                 "name": name,
                 "vector_dim": info.config.params.vectors.size,
                 "status": str(info.status),
-                "points_count": info.points_count,
+                "points_count": points_count,
             }
         except Exception as exc:
             logger.error("qdrant_get_collection_info_failed", name=name, error=str(exc))
@@ -279,6 +284,7 @@ class QdrantVectorStore(VectorStoreBase):
     ) -> list[SearchResult]:
         client = await self._get_client()
         filter_obj = build_query_filter(query_filter)
+        start = time.perf_counter()
         try:
             results = await asyncio.wait_for(
                 client.query_points(
@@ -307,6 +313,8 @@ class QdrantVectorStore(VectorStoreBase):
                 ErrorCode.QDRANT_UNAVAILABLE,
                 f"Search failed for collection '{collection}'",
             ) from exc
+        finally:
+            record_kb_query(collection=collection, strategy="similarity", duration=time.perf_counter() - start)
 
     async def hybrid_search(
         self,
@@ -335,6 +343,7 @@ class QdrantVectorStore(VectorStoreBase):
             limit=limit * 3,
             filter=filter_obj,
         )
+        start = time.perf_counter()
         try:
             results = await asyncio.wait_for(
                 client.query_points(
@@ -367,6 +376,8 @@ class QdrantVectorStore(VectorStoreBase):
                 ErrorCode.QDRANT_UNAVAILABLE,
                 f"Hybrid search failed for collection '{collection}'",
             ) from exc
+        finally:
+            record_kb_query(collection=collection, strategy="hybrid", duration=time.perf_counter() - start)
 
     async def search_by_strategy(
         self,
@@ -419,6 +430,7 @@ class QdrantVectorStore(VectorStoreBase):
             indices=list(sparse_vector.keys()),
             values=list(sparse_vector.values()),
         )
+        start = time.perf_counter()
         try:
             results = await asyncio.wait_for(
                 client.query_points(
@@ -452,6 +464,8 @@ class QdrantVectorStore(VectorStoreBase):
                 ErrorCode.QDRANT_UNAVAILABLE,
                 f"Sparse search failed for collection '{collection}'",
             ) from exc
+        finally:
+            record_kb_query(collection=collection, strategy="keyword", duration=time.perf_counter() - start)
 
     async def delete_points(self, collection: str, point_ids: list[str]) -> None:
         client = await self._get_client()

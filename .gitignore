@@ -13,7 +13,6 @@ build/
 .venv/
 venv/
 env/
-TestNewHarness/.venv/
 
 # --- Secrets ---
 # .env  intentionally tracked in git (team policy); use private remote if keys inside
@@ -27,7 +26,6 @@ secrets/*
 .vscode/
 .idea/
 .cursor/
-TestNewHarness/.cursor/
 *.swp
 *.swo
 *~
@@ -39,8 +37,6 @@ htmlcov/
 .ruff_cache/
 .mypy_cache/
 .hypothesis/
-TestNewHarness/.pytest_cache/
-TestNewHarness/.ruff_cache/
 
 # --- Logs & temp ---
 *.log
@@ -65,10 +61,3 @@ redis_data/
 
 # --- Alembic pycache ---
 migrations/versions/__pycache__/
-TestNewHarness/**/__pycache__/
-
-# --- Nested git (reference product repo) ---
-TestNewHarness/.git/
-
-# --- Reference product tree (optional: delete this line to track TestNewHarness) ---
-TestNewHarness/

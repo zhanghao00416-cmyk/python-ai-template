@@ -91,7 +91,7 @@ steps:
 
 ---
 
-## 3. 编程式 StateGraph — [TBD: filled by F13]
+## 3. 编程式 StateGraph — [filled by F13]
 
 ### 3.1 核心概念
 
@@ -140,7 +140,7 @@ def route_intent(state) -> str:
 
 ---
 
-## 4. DAG 执行 — [TBD: filled by F13]
+## 4. DAG 执行 — [filled by F13]
 
 ### 4.1 执行模型
 
@@ -263,7 +263,7 @@ def resolve_capabilities(step, agent) -> set[str]:
 
 ---
 
-## 8. 与领域的集成 — [TBD: filled by F13]
+## 8. 与领域的集成 — [filled by F13]
 
 ```python
 # In domain/orchestration/service.py (F14+)

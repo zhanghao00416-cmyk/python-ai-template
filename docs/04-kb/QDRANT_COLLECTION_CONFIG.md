@@ -126,7 +126,7 @@ class PointPayload:
     parent_id: str | None     # 子分块：指向父分块 ID；父分块：None
 ```
 
-### 可配置维度 — [TBD: filled by F15a]
+### 可配置维度 — [filled by F15a]
 
 `doc_type`、`source` 和 `tag` 是可配置维度，不在代码中硬编码：
 
@@ -197,7 +197,7 @@ DELETE /api/v1/kb/collections/{collection_name}
 → Deletes collection and all its points (irreversible)
 ```
 
-## 文档操作 — [TBD: filled by F15a/F15b]
+## 文档操作 — [filled by F15a/F15b]
 
 ### 上传文档
 

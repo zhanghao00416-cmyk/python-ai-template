@@ -22,6 +22,7 @@ from app.core.errors import (
     make_error,
 )
 from app.core.logging import get_logger
+from app.core.metrics import record_agent_step
 from app.tools.registry import ToolRegistry
 
 logger = get_logger("agent.base")
@@ -81,6 +82,14 @@ class BaseAgent(ABC):
                 ERROR_CODE_AGENT_EXECUTION_FAILED,
                 f"Agent '{self.name}' execution failed: {exc}",
             ) from exc
+
+    def _record_step(self, duration: float) -> None:
+        """Record a single agent step metric."""
+        record_agent_step(
+            agent_name=self.name,
+            agent_type=self.agent_type,
+            duration=duration,
+        )
 
     @abstractmethod
     async def _run_loop(self, user_input: str, context: dict[str, Any]) -> AgentResult:

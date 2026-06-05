@@ -85,11 +85,21 @@ async def _init_infra(settings: Any) -> None:
         global _vector_store
         _vector_store = QdrantVectorStore()
         container.register(VectorStoreBase, lambda v=_vector_store: v, singleton=True)
+        container.register(QdrantVectorStore, lambda v=_vector_store: v, singleton=True)
         health["qdrant"] = "ok"
         logger.info("bootstrap.qdrant_ok")
     except Exception as exc:
         health["qdrant"] = "degraded"
         logger.warning("bootstrap.qdrant_init_failed", error=str(exc))
+
+    try:
+        from app.services.embedding import EmbeddingService
+
+        embedding_svc = EmbeddingService()
+        container.register(EmbeddingService, lambda e=embedding_svc: e, singleton=True)
+        logger.info("bootstrap.embedding_service_registered")
+    except Exception as exc:
+        logger.warning("bootstrap.embedding_service_failed", error=str(exc))
 
     try:
         await _init_qdrant_collections(settings)
@@ -170,6 +180,16 @@ async def _shutdown_infra() -> None:
         except Exception as exc:
             logger.warning("bootstrap.vector_store_close_failed", error=str(exc))
         _vector_store = None
+
+    try:
+        from app.services.embedding import EmbeddingService
+
+        emb_svc = container.resolve(EmbeddingService)
+        if emb_svc is not None and hasattr(emb_svc, "close"):
+            await emb_svc.close()
+            logger.info("bootstrap.embedding_service_closed")
+    except Exception as exc:
+        logger.warning("bootstrap.embedding_service_close_failed", error=str(exc))
 
 
 def _seed_prompt_defaults(settings: Any) -> None:

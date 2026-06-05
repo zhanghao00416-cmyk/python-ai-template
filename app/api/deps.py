@@ -49,6 +49,41 @@ def get_task_service(session: AsyncSession):
     return TaskService(repo=repo, task_queue=task_queue)
 
 
+def get_knowledge_service(session: AsyncSession):
+    """Factory to create a KnowledgeService with resolved infra dependencies."""
+    import importlib
+
+    from app.domain.knowledge.repo import KnowledgeRepo
+    from app.domain.knowledge.service import KnowledgeService
+    from app.services.llm.gateway import LLMGateway
+    from app.services.prompt_manager import PromptManager
+
+    vs_mod = importlib.import_module("app.infra.vector_store.qdrant_store")
+    vs_cls = getattr(vs_mod, "QdrantVectorStore")
+    vector_store = container.resolve(vs_cls)
+    repo = KnowledgeRepo(vector_store=vector_store)
+    task_service = get_task_service(session)
+
+    llm_gateway = None
+    try:
+        llm_gateway = container.resolve(LLMGateway)
+    except Exception:
+        pass
+
+    prompt_manager = None
+    try:
+        prompt_manager = container.resolve(PromptManager)
+    except Exception:
+        pass
+
+    return KnowledgeService(
+        repo=repo,
+        task_service=task_service,
+        llm_gateway=llm_gateway,
+        prompt_manager=prompt_manager,
+    )
+
+
 def _resolve_redis_client():
     """Resolve RedisClient from DI container; avoids top-level app.infra import."""
     import importlib

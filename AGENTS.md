@@ -21,8 +21,8 @@
 
 执行工单 FNN 时：
 
-1. 查 `docs/00-meta/DEPENDENCY_MAP.md` 表 1–2（本仓依赖）；表 3 **TestNewHarness** 为可选对照，规则见该节。
-2. **阶段 1**：读完工单列出的全部 docs + 前序代码；可选读表 3 老项目路径并输出差异表，**禁止写代码、禁止整文件复制**。
+1. 查 `docs/00-meta/DEPENDENCY_MAP.md` 表 1–2（本仓依赖）。
+2. **阶段 1**：读完工单列出的全部 docs + 前序代码，**禁止写代码**。
 3. **阶段 2**：仅实现本工单范围。
 4. **阶段 3**：对照 `evaluator-rubric.md` 自审 → 更新 `feature_list.json` + `progress.md`（**含下一任务**，见 §6.1）→ 填 `session-handoff.md`。
 

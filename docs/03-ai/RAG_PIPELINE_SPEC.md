@@ -4,7 +4,7 @@
 
 RAG（检索增强生成）流水线负责知识库文档摄入、向量索引和检索增强问答。该流水线跨越 `domain/knowledge/` 和 `infra/vector_store/` 层。
 
-## 流水线架构 — [TBD: filled by F15a/F15b]
+## 流水线架构 — [filled by F15a/F15b]
 
 ```
 User Query
@@ -26,7 +26,7 @@ Intent Classification (→ RAG intent)
 RAG Response (answer + citations)
 ```
 
-## 文档摄入 — [TBD: filled by F15a]
+## 文档摄入 — [filled by F15a]
 
 ### 流水线流程
 
@@ -42,7 +42,7 @@ Store in Qdrant (with metadata: collection, doc_type, source, tag, uploader, doc
 Return document ID
 ```
 
-### 分块策略 — [TBD: filled by F15a]
+### 分块策略 — [filled by F15a]
 
 - 仅支持 Markdown 文档
 - 4 种可配置分块策略：
@@ -54,7 +54,7 @@ Return document ID
 | 语义分块 | `semantic` | `similarity_threshold`（默认 0.85） |
 | 段落分块 | `paragraph` | `min_paragraph_chars`（默认 50） |
 
-### 父子分块模式 — [TBD: filled by F15a]
+### 父子分块模式 — [filled by F15a]
 
 所有 4 种分块策略均支持通过 `enable_parent_child=true` 启用可选的父子模式：
 
@@ -63,7 +63,7 @@ Return document ID
 
 每个子分块存储 `parent_id` 指向其父分块。检索时，匹配到子分块会自动返回父分块内容。
 
-### 分块元数据 — [TBD: filled by F15a]
+### 分块元数据 — [filled by F15a]
 
 ```python
 class ChunkMetadata:
@@ -81,7 +81,7 @@ class ChunkMetadata:
     parent_id: str | None    # Child: points to parent chunk ID; Parent: None
 ```
 
-## 向量检索 — [TBD: filled by F05, F15b]
+## 向量检索 — [filled by F05, F15b]
 
 ### 查询流程
 
@@ -95,7 +95,7 @@ Search Qdrant (with filters)
 Return top-K chunks with scores
 ```
 
-### 过滤 — [TBD: filled by F15b]
+### 过滤 — [filled by F15b]
 
 Qdrant 查询支持多维过滤：
 
@@ -110,7 +110,7 @@ class RetrievalFilter:
     limit: int = 5                 # Max number of results
 ```
 
-### 检索策略 — [TBD: filled by F15b]
+### 检索策略 — [filled by F15b]
 
 | 策略 | 键名 | 描述 |
 |------|------|------|
@@ -121,7 +121,7 @@ class RetrievalFilter:
 
 可通过 `enable_rerank` 参数可选启用重排序。
 
-### 混合搜索 — [TBD: filled by F05]
+### 混合搜索 — [filled by F05]
 
 同时支持稠密（语义）和稀疏（关键词）向量检索：
 
@@ -129,7 +129,7 @@ class RetrievalFilter:
 - 稀疏：BM25/稀疏向量进行关键词匹配
 - 结果通过倒数排名融合（RRF）合并
 
-## 上下文组装 — [TBD: filled by F15b]
+## 上下文组装 — [filled by F15b]
 
 检索后，为 LLM 组装上下文：
 
@@ -145,7 +145,7 @@ class RAGContext:
 2. 若总上下文超出 token 预算则截断
 3. 注入到包含 `{context}` 和 `{question}` 变量的提示模板中
 
-## 提示构造 — [TBD: filled by F15b]
+## 提示构造 — [filled by F15b]
 
 RAG 提示模板从 `prompts/rag/` 加载：
 
@@ -165,14 +165,14 @@ Always cite your sources using [citation:N] format.
 
 模板由 `services/prompt_manager/` 加载并通过变量替换渲染。
 
-## LLM 生成 — [TBD: filled by F15b]
+## LLM 生成 — [filled by F15b]
 
 - 使用 LLM Gateway，`task_type="rag_merge"`
 - 支持流式和非流式响应
 - Token 用量被跟踪和记录
 - 并发由 LLM 信号量控制
 
-## 引用提取 — [TBD: filled by F15b]
+## 引用提取 — [filled by F15b]
 
 ```python
 class Citation:
@@ -186,7 +186,7 @@ class Citation:
 
 引用从 LLM 响应中提取并匹配回已检索的分块。
 
-## API 集成 — [TBD: filled by F15a/F15b]
+## API 集成 — [filled by F15a/F15b]
 
 | 端点 | 方法 | 描述 |
 |------|------|------|
@@ -198,7 +198,7 @@ class Citation:
 | /api/v1/kb/collections/{name}/documents | DELETE | 删除文档（批量/清空需 confirm_token） |
 | /api/v1/kb/query | POST | RAG 查询，可配置检索策略 |
 
-## 错误码 — [TBD: filled by F15b]
+## 错误码 — [filled by F15b]
 
 | 错误码 | 名称 | 描述 |
 |--------|------|------|
@@ -209,4 +209,4 @@ class Citation:
 | 3005 | RAG_INDEXING_FAILED | 文档索引失败 |
 | 3006 | RAG_DOCUMENT_NOT_FOUND | 文档不存在 |
 
-[TBD: filled by work orders F05, F15a/F15b]
+[filled by work orders F05, F15a/F15b]

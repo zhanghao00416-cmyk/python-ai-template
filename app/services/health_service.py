@@ -51,3 +51,30 @@ async def check_qdrant() -> dict:
     except Exception as exc:
         logger.warning("health.qdrant_check_failed", error=str(exc))
         return {"status": "degraded", "latency_ms": None}
+
+
+async def check_llm() -> dict:
+    """Check LLM gateway channel health (circuit breaker state + latency)."""
+    try:
+        from app.infra.circuit_breaker import get_circuit_breaker
+        from app.services.llm.gateway import LLMGateway
+
+        gateway = container.resolve(LLMGateway)
+        channels: dict[str, dict] = {}
+        overall = "ok"
+
+        for channel in ("qwen_cloud", "vllm"):
+            cb_name = f"llm_{channel}" if channel == "vllm" else "llm_text"
+            try:
+                cb = get_circuit_breaker(cb_name)
+                state = cb.state.value if cb else "unknown"
+                if state == "open":
+                    overall = "degraded"
+                channels[channel] = {"status": state, "latency_ms": None}
+            except Exception:
+                channels[channel] = {"status": "unknown", "latency_ms": None}
+
+        return {"status": overall, "channels": channels}
+    except Exception as exc:
+        logger.warning("health.llm_check_failed", error=str(exc))
+        return {"status": "degraded", "channels": {}}

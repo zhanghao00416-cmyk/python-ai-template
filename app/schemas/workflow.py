@@ -7,18 +7,17 @@ Implements API_CONTRACT.md Workflow section:
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
 
 
-class WorkflowNodeStatus(str, Enum):
+class WorkflowNodeStatus(StrEnum):
     """Status of a single workflow node execution."""
 
     COMPLETED = "completed"
@@ -26,7 +25,7 @@ class WorkflowNodeStatus(str, Enum):
     SKIPPED = "skipped"
 
 
-class WorkflowStatus(str, Enum):
+class WorkflowStatus(StrEnum):
     """Overall workflow execution status."""
 
     RUNNING = "running"
@@ -46,7 +45,7 @@ class WorkflowRunRequest(BaseModel):
     session_id: str = Field(..., description="会话标识")
     workflow_id: str = Field(..., description="workflows/ 目录中的工作流名称")
     inputs: dict[str, Any] = Field(default_factory=dict, description="工作流键值输入参数")
-    stream: bool = Field(default=True, description="默认 true；false 返回同步 JSON")
+    stream: bool = Field(default=True, description="默认 true; false 返回同步 JSON")
     metadata: dict[str, Any] = Field(default_factory=dict, description="可扩展业务元数据")
 
 
@@ -60,9 +59,9 @@ class WorkflowNodeResult(BaseModel):
 
     name: str = Field(..., description="节点名称")
     status: str = Field(default="completed", description="completed | failed | skipped")
-    duration_ms: float = Field(default=0.0, description="执行耗时（毫秒）")
+    duration_ms: float = Field(default=0.0, description="执行耗时(ms)")
     output: dict[str, Any] | None = Field(default=None, description="节点输出")
-    error: str | None = Field(default=None, description="错误信息（仅 failed 状态）")
+    error: str | None = Field(default=None, description="错误信息(仅 failed 状态)")
 
 
 class WorkflowRunResponse(BaseModel):

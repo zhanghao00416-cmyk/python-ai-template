@@ -4,7 +4,7 @@
 
 本文档定义了 Python AI 模板的安全模型，涵盖认证、限流、输入验证和数据保护。安全强制配置位于 `app/middleware/`。
 
-## 认证 — [TBD: filled by F20]
+## 认证 — [filled by F20]
 
 ### API 密钥认证
 
@@ -18,13 +18,13 @@ X-API-Key: <api_key>
 - 开发环境下可通过配置 (`AUTH_ENABLED: false`) 禁用认证
 - 禁用时，使用 `X-User-Id` 请求头或配置中的默认 `user_id`
 
-### 密钥存储 — [TBD: filled by F20]
+### 密钥存储 — [filled by F20]
 
 - 生产环境：环境变量或 Docker Secrets (`${API_KEYS}`)
 - 开发环境：`.env` 文件
 - 密钥绝不存储在 YAML 配置文件中，也不提交至版本控制
 
-### 认证中间件 — [TBD: filled by F20]
+### 认证中间件 — [filled by F20]
 
 ```python
 class AuthMiddleware:
@@ -38,14 +38,14 @@ class AuthMiddleware:
         """
 ```
 
-### 豁免端点 — [TBD: filled by F20]
+### 豁免端点 — [filled by F20]
 
 | 端点 | 原因 |
 |------|------|
 | GET /api/v1/health | 健康检查 |
 | GET /metrics | Prometheus 指标 |
 
-## 限流 — [TBD: filled by F20]
+## 限流 — [filled by F20]
 
 ### 基于 Redis 的限流
 
@@ -63,7 +63,7 @@ class RateLimiter:
         """
 ```
 
-### 配置 — [TBD: filled by F20]
+### 配置 — [filled by F20]
 
 ```yaml
 rate_limit:
@@ -80,7 +80,7 @@ rate_limit:
       window_seconds: 60
 ```
 
-### 限流响应 — [TBD: filled by F20]
+### 限流响应 — [filled by F20]
 
 超出限流时：
 
@@ -97,7 +97,7 @@ HTTP 状态码：429 Too Many Requests。
 
 响应头：`Retry-After: 30`、`X-RateLimit-Limit: 100`、`X-RateLimit-Remaining: 0`。
 
-## 输入验证 — [TBD: filled by F03]
+## 输入验证 — [filled by F03]
 
 ### Pydantic 模式
 
@@ -111,7 +111,7 @@ class ChatRequest(BaseModel):
     stream: bool = True
 ```
 
-### 验证规则 — [TBD: filled by F03]
+### 验证规则 — [filled by F03]
 
 | 字段 | 规则 |
 |------|------|
@@ -121,13 +121,13 @@ class ChatRequest(BaseModel):
 | 文档内容 | 每次上传最大 5MB |
 | 提示词名称 | 字母数字 + 下划线，最多 128 字符 |
 
-### 输出清洗 — [TBD: filled by F03]
+### 输出清洗 — [filled by F03]
 
 - API 响应中不包含原始堆栈跟踪
 - 错误消息通过错误码系统映射
 - LLM 输出不做清洗（本模板信任模型输出）
 
-## 请求上下文传播 — [TBD: filled by F03]
+## 请求上下文传播 — [filled by F03]
 
 每个请求必须携带：
 
@@ -140,7 +140,7 @@ class ChatRequest(BaseModel):
 
 这些通过 `app/middleware/trace.py` 设置，并通过 `contextvars` 访问。
 
-## 跨域资源共享 (CORS) — [TBD: filled by F01]
+## 跨域资源共享 (CORS) — [filled by F01]
 
 ```python
 app.add_middleware(
@@ -151,7 +151,7 @@ app.add_middleware(
 )
 ```
 
-## 数据保护 — [TBD: filled by F20]
+## 数据保护 — [filled by F20]
 
 - YAML 配置文件中不含密钥（使用 `.env` 或 Docker Secrets）
 - API 密钥比较前先进行哈希处理
@@ -159,7 +159,7 @@ app.add_middleware(
 - SSE 流不暴露内部错误细节
 - Redis 键设有 TTL（无无限期数据保留）
 
-## 安全响应头 — [TBD: filled by F01]
+## 安全响应头 — [filled by F01]
 
 | 响应头 | 值 |
 |--------|-----|
@@ -167,4 +167,4 @@ app.add_middleware(
 | X-Frame-Options | DENY |
 | Content-Security-Policy | default-src 'none' |
 
-[TBD: filled by work orders F01, F03, F20]
+[filled by work orders F01, F03, F20]

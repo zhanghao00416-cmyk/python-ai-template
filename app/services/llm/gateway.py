@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import AsyncIterator
 from typing import Any
 
@@ -7,7 +8,8 @@ import structlog
 
 from app.core.errors import AppError, ErrorCode
 from app.core.config import get_settings
-from app.infra.circuit_breaker import CircuitBreaker, get_circuit_breaker
+from app.core.metrics import record_llm_call, record_circuit_breaker_state
+from app.infra.circuit_breaker import CircuitBreaker, CircuitState, get_circuit_breaker
 from app.infra.semaphore_manager import SemaphoreManager, get_semaphore_manager
 from app.schemas.llm import LLMRequest, LLMResponse, LLMChunk
 from app.services.llm.router import LLMRouter
@@ -80,20 +82,63 @@ class LLMGateway:
                     "服务暂时不可用（熔断器开启）",
                 )
 
+        start = time.perf_counter()
+        provider_name = type(provider).__name__
+        model_name = request.model or ""
+        task_type = request.task_type
+        cb_state_map = {CircuitState.CLOSED: 0, CircuitState.OPEN: 1, CircuitState.HALF_OPEN: 2}
+        record_circuit_breaker_state(
+            channel=cb_name,
+            state_value=cb_state_map.get(cb.state, 0),
+            provider=provider_name,
+        )
+
         async with self._sem_manager.acquire(sem_name):
             try:
                 result = await provider.generate(request)
                 await cb.record_success()
+                duration = time.perf_counter() - start
+                record_llm_call(
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=duration,
+                    input_tokens=result.input_tokens,
+                    output_tokens=result.output_tokens,
+                )
+                logger.info(
+                    "gateway_generate_complete",
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=round(duration, 3),
+                    input_tokens=result.input_tokens,
+                    output_tokens=result.output_tokens,
+                )
                 return result
             except AppError:
                 await cb.record_failure()
+                duration = time.perf_counter() - start
+                record_llm_call(
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=duration,
+                )
                 raise
             except Exception as exc:
                 await cb.record_failure()
+                duration = time.perf_counter() - start
+                record_llm_call(
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=duration,
+                )
                 logger.error(
                     "gateway_generate_failed",
-                    provider=type(provider).__name__,
-                    task_type=request.task_type,
+                    provider=provider_name,
+                    task_type=task_type,
                     error=str(exc),
                 )
                 raise AppError(ErrorCode.SERVICE_UNAVAILABLE, "LLM 调用失败") from exc
@@ -124,21 +169,74 @@ class LLMGateway:
                     "服务暂时不可用（熔断器开启）",
                 )
 
+        start = time.perf_counter()
+        provider_name = type(provider).__name__
+        model_name = request.model or ""
+        task_type = request.task_type
+        total_input_tokens = 0
+        total_output_tokens = 0
+        cb_state_map = {CircuitState.CLOSED: 0, CircuitState.OPEN: 1, CircuitState.HALF_OPEN: 2}
+        record_circuit_breaker_state(
+            channel=cb_name,
+            state_value=cb_state_map.get(cb.state, 0),
+            provider=provider_name,
+        )
+
         async with self._sem_manager.acquire(sem_name):
             try:
                 stream = provider.generate_stream(request)
                 async for chunk in stream:
+                    if chunk.input_tokens is not None:
+                        total_input_tokens = chunk.input_tokens
+                    if chunk.output_tokens is not None:
+                        total_output_tokens = chunk.output_tokens
                     yield chunk
                 await cb.record_success()
+                duration = time.perf_counter() - start
+                record_llm_call(
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=duration,
+                    input_tokens=total_input_tokens,
+                    output_tokens=total_output_tokens,
+                )
+                logger.info(
+                    "gateway_stream_complete",
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=round(duration, 3),
+                    input_tokens=total_input_tokens,
+                    output_tokens=total_output_tokens,
+                )
             except AppError:
                 await cb.record_failure()
+                duration = time.perf_counter() - start
+                record_llm_call(
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=duration,
+                    input_tokens=total_input_tokens,
+                    output_tokens=total_output_tokens,
+                )
                 raise
             except Exception as exc:
                 await cb.record_failure()
+                duration = time.perf_counter() - start
+                record_llm_call(
+                    provider=provider_name,
+                    model=model_name,
+                    task_type=task_type,
+                    duration=duration,
+                    input_tokens=total_input_tokens,
+                    output_tokens=total_output_tokens,
+                )
                 logger.error(
                     "gateway_stream_failed",
-                    provider=type(provider).__name__,
-                    task_type=request.task_type,
+                    provider=provider_name,
+                    task_type=task_type,
                     error=str(exc),
                 )
                 raise AppError(ErrorCode.SERVICE_UNAVAILABLE, "LLM 调用失败") from exc

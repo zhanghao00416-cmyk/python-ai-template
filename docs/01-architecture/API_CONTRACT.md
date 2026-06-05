@@ -95,7 +95,7 @@
 
 ---
 
-### Orchestrated — [TBD: filled by F14+]
+### Orchestrated — [filled by F14+]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -204,7 +204,7 @@ start → [intent]? → [route]? → [agent]* → [tool]* → [citation]* → [h
 
 ---
 
-### Chat — [TBD: filled by F14]
+### Chat — [filled by F14]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -348,7 +348,7 @@ start → [heartbeat]* → chunk* → [citation]? → [usage]? → done
 
 ---
 
-### Knowledge Base — [TBD: filled by F15a/F15b]
+### Knowledge Base — [filled by F15a/F15b]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -691,7 +691,7 @@ start → [heartbeat]* → [citation]? → chunk* → [usage]? → done
 
 ---
 
-### Intent — [TBD: filled by F16]
+### Intent — [filled by F16]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -814,7 +814,7 @@ intent:
 
 ---
 
-### Prompt 管理 — [TBD: filled by F17]
+### Prompt 管理 — [filled by F17]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -959,7 +959,7 @@ intent:
 
 ---
 
-### Agent — [TBD: filled by F11, F12]
+### Agent — [filled by F11, F12]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -1167,7 +1167,7 @@ Agent 专用 SSE 事件：
 
 ---
 
-### Workflow — [TBD: filled by F13]
+### Workflow — [filled by F13]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -1332,7 +1332,7 @@ Workflow 专用 SSE 事件：
 
 ---
 
-### 可观测性 — [TBD: filled by F18]
+### 可观测性 — [filled by F18]
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -1392,7 +1392,7 @@ start → [intent]? → [route]? → [heartbeat]* → chunk* → [structured]? �
 - **事件顺序**：`start` 始终为首；`done` 或 `error` 始终为尾；其他事件按域特定顺序出现
 - **使用量**：所有涉及 LLM 调用的流式端点，在 `done` 之前发送 `usage` 事件
 
-## 认证 — [TBD: filled by F20]
+## 认证 — [filled by F20]
 
 - API Key 头：`X-API-Key`
 - 通过 Redis 限流（可配置阈值）
@@ -1405,4 +1405,4 @@ start → [intent]? → [route]? → [heartbeat]* → chunk* → [structured]? �
 - `user_id` — 来自认证或请求头 `X-User-Id`
 - `session_id` — 来自请求体或请求头
 
-[TBD: filled by work orders F01, F06, F07, F14–F17, F20]
+[filled by work orders F01, F06, F07, F14–F17, F20]

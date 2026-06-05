@@ -4,7 +4,7 @@
 
 意图路由服务（`app/domain/intent/`）通过三层流水线（关键词 → 相似度 → LLM）将用户输入分类到若干意图类别之一，并将请求路由到相应的处理流水线。支持多意图检测及主语省略补全的查询重构。
 
-## 意图类别 — [TBD: filled by F16]
+## 意图类别 — [filled by F16]
 
 | 意图 | 描述 | 目标流水线 |
 |--------|-------------|----------------|
@@ -15,7 +15,7 @@
 
 默认意图类型可通过 prompt 配置由业务方扩展。模板提供上述 4 种；业务项目可通过 `candidates` 参数及 prompt 更新添加更多类型。
 
-## 架构 — [TBD: filled by F16]
+## 架构 — [filled by F16]
 
 ```
 User Input
@@ -35,7 +35,7 @@ Router → Target Domain
 
 意图服务设计为简单分类并返回结果。实际路由决策由调用方（API 层或 workflow）做出。
 
-## 三层流水线 — [TBD: filled by F16]
+## 三层流水线 — [filled by F16]
 
 ### L1：关键词匹配
 
@@ -83,7 +83,7 @@ class LLMClassifier:
         """
 ```
 
-### 多意图检测 — [TBD: filled by F16]
+### 多意图检测 — [filled by F16]
 
 启用后，LLM 分类层可在单次查询中检测多个意图：
 
@@ -98,7 +98,7 @@ class LLMClassifier:
 | `query` | 重构后的完整查询（解决主语省略） |
 | `original_query` | 来自用户输入的原始文本片段 |
 
-## Prompt 模板 — [TBD: filled by F16]
+## Prompt 模板 — [filled by F16]
 
 模板从 `prompts/intent/classify.md` 加载：
 
@@ -123,7 +123,7 @@ Respond in JSON format:
 {{"primary_intent": "<category>", "confidence": <0.0-1.0>, "reasoning": "<brief explanation>", "sub_intents": [{{"intent": "<category>", "query": "<reconstructed full question>", "original_query": "<original fragment>", "confidence": <0.0-1.0>}}]}}
 ```
 
-## 意图结果 — [TBD: filled by F16]
+## 意图结果 — [filled by F16]
 
 ```python
 class IntentResult:
@@ -148,7 +148,7 @@ class RoutingInfo:
     model: str                     # Recommended model
 ```
 
-## 降级策略 — [TBD: filled by F16]
+## 降级策略 — [filled by F16]
 
 | 场景 | 降级意图 |
 |----------|----------------|
@@ -157,7 +157,7 @@ class RoutingInfo:
 | 未知意图类别 | `chat` |
 | 输入过短（< 3 个字符） | `chat` |
 
-## 配置 — [TBD: filled by F16]
+## 配置 — [filled by F16]
 
 ```yaml
 # configs/default.yaml
@@ -190,7 +190,7 @@ intent:
   timeout: 5.0
 ```
 
-## 与 Workflow 的集成 — [TBD: filled by F16]
+## 与 Workflow 的集成 — [filled by F16]
 
 意图路由可作为 workflow 节点使用：
 
@@ -201,7 +201,7 @@ graph.add_conditional_edges("classify_intent", route_by_intent)
 # route_by_intent returns: "qa_node", "task_node", "chat_node", "retrieve_node", etc.
 ```
 
-## API 端点 — [TBD: filled by F16]
+## API 端点 — [filled by F16]
 
 | 方法 | 路径 | 描述 |
 |--------|------|-------------|
@@ -249,7 +249,7 @@ graph.add_conditional_edges("classify_intent", route_by_intent)
 }
 ```
 
-## 错误码 — [TBD: filled by F16]
+## 错误码 — [filled by F16]
 
 | 错误码 | 名称 | 描述 |
 |------|------|-------------|
@@ -258,4 +258,4 @@ graph.add_conditional_edges("classify_intent", route_by_intent)
 | 2003 | INTENT_TIMEOUT | 分类超时 |
 | 2004 | INTENT_INVALID_INPUT | 输入过短或格式异常 |
 
-[TBD: filled by work order F16]
+[filled by work order F16]

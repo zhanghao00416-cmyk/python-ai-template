@@ -122,7 +122,7 @@ async def generate(self, request):
 | 模型未找到 | `0003 SERVICE_UNAVAILABLE` | 使用降级通道重试 |
 | 无效请求 | `0005 VALIDATION_ERROR` | 立即失败 |
 
-## 令牌追踪 — [TBD: filled by F18]
+## 令牌追踪 — [filled by F18]
 
 每次调用记录：
 - `input_tokens`、`output_tokens`
@@ -154,4 +154,4 @@ llm:
       base_url: http://localhost:8000
 ```
 
-[TBD: filled by work orders F18]
+[filled by work orders F18]

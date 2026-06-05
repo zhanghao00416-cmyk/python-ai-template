@@ -4,7 +4,7 @@
 
 项目在 `app/core/di.py` 中使用轻量级依赖注入容器，与 FastAPI 的 `Depends` 系统集成。容器遵循注册/解析/覆盖模式。
 
-## 容器 API — [TBD: filled by F01]
+## 容器 API — [filled by F01]
 
 ### 核心方法
 
@@ -39,7 +39,7 @@ container.register(SomeHandler, some_handler_factory, singleton=False)
 container.override(LLMGateway, mock_llm_gateway_factory)
 ```
 
-## FastAPI 集成 — [TBD: filled by F01]
+## FastAPI 集成 — [filled by F01]
 
 DI 容器与 FastAPI 之间的桥接在 `app/api/deps.py` 中：
 
@@ -57,7 +57,7 @@ async def chat(gateway: LLMGateway = Depends(get_llm_gateway)):
     ...
 ```
 
-## 注册顺序 — [TBD: filled by F01]
+## 注册顺序 — [filled by F01]
 
 注册在应用启动时于 `app/main.py` 中完成：
 
@@ -69,7 +69,7 @@ async def chat(gateway: LLMGateway = Depends(get_llm_gateway)):
 
 注册必须遵循依赖方向：infra → services → domain。
 
-## 单例生命周期 — [TBD: filled by F01]
+## 单例生命周期 — [filled by F01]
 
 | 阶段 | 操作 |
 |-------|--------|
@@ -78,7 +78,7 @@ async def chat(gateway: LLMGateway = Depends(get_llm_gateway)):
 | 测试 | 测试前用 `container.override()` 注入 mock，测试后 `container.reset()` 恢复 |
 | 关闭 | `container.cleanup()` 释放资源 |
 
-## 模块注册参考 — [TBD: filled by subsequent work orders]
+## 模块注册参考 — [filled by subsequent work orders]
 
 | 模块 | 注册类型 | 单例 | 工单 |
 |--------|----------------|-----------|------------|
@@ -105,4 +105,4 @@ container.reset(LLMGateway)
 
 所有服务依赖均通过容器解析，使每个组件均可通过 mock 替代进行测试。
 
-[TBD: filled by work orders F01, F02, F04–F10]
+[filled by work orders F01, F02, F04–F10]

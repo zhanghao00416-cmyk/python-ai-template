@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import redis.asyncio as aioredis
 import structlog
 
-import redis.asyncio as aioredis
-
-from app.core.errors import InfraError, ErrorCode
+from app.core.errors import ErrorCode, InfraError
 
 logger = structlog.get_logger("infra.redis_client")
 
@@ -59,6 +58,10 @@ class RedisClient:
     async def incr(self, key: str) -> int:
         """Increment counter (for rate limiting)."""
         return await self.client.incr(key)
+
+    async def expire(self, key: str, seconds: int) -> bool:
+        """Set TTL on a key. Returns True if TTL was set."""
+        return await self.client.expire(key, seconds)
 
     async def hgetall(self, name: str) -> dict[str, str]:
         """Get all fields and values in a hash."""

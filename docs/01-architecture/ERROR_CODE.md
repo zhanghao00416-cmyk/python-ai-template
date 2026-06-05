@@ -71,7 +71,7 @@ def parse_error_code(value: str | int) -> int:
 | 0006 | RATE_LIMITED | 429 | 请求速率超限 |
 | 0007 | DEPENDENCY_ERROR | 502 | 外部依赖调用失败 |
 
-### 1xxx — 认证 — [TBD: filled by F20]
+### 1xxx — 认证 — [filled by F20]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -81,7 +81,7 @@ def parse_error_code(value: str | int) -> int:
 | 1004 | AUTH_RATE_LIMITED | 429 | 该密钥请求速率超限 |
 | 1005 | AUTH_BODY_TOO_LARGE | 413 | 请求体超过最大限制 |
 
-### 2xxx — 意图 — [TBD: filled by F16]
+### 2xxx — 意图 — [filled by F16]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -90,7 +90,7 @@ def parse_error_code(value: str | int) -> int:
 | 2003 | INTENT_TIMEOUT | 504 | 意图分类超时 |
 | 2004 | INTENT_INVALID_INPUT | 400 | 输入过短或格式异常，无法分类 |
 
-### 3xxx — RAG — [TBD: filled by F15b]
+### 3xxx — RAG — [filled by F15b]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -102,14 +102,14 @@ def parse_error_code(value: str | int) -> int:
 | 3006 | RAG_DOCUMENT_NOT_FOUND | 404 | 请求的文档不存在 |
 | 3007 | RAG_RERANK_NOT_ENABLED | 400 | 请求了重排序但未启用 |
 
-### 4xxx — 多模态 — [TBD: reserved]
+### 4xxx — 多模态 — [reserved]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
 | 4001 | MULTIMODAL_INVALID_INPUT | 400 | 无效或不可达的多模态输入 |
 | 4002 | MULTIMODAL_PROCESSING_FAILED | 500 | 多模态处理失败 |
 
-### 5xxx — 保留 — [TBD: reserved]
+### 5xxx — 保留 — [reserved]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -128,7 +128,7 @@ def parse_error_code(value: str | int) -> int:
 | 6005 | KB_VECTOR_WRITE_FAILED | 500 | 向量写入失败 |
 | 6006 | KB_CHUNK_LIMIT_EXCEEDED | 413 | 分块数量超过 max_chunks 限制 |
 
-### 7xxx — 智能体 — [TBD: filled by F11, F12]
+### 7xxx — 智能体 — [filled by F11, F12]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -138,7 +138,7 @@ def parse_error_code(value: str | int) -> int:
 | 7004 | AGENT_MAX_ITERATIONS | 500 | 智能体超过最大迭代次数 |
 | 7005 | AGENT_ORCHESTRATION_FAILED | 500 | 多智能体编排失败 |
 
-### 8xxx — 工作流 — [TBD: filled by F13]
+### 8xxx — 工作流 — [filled by F13]
 
 | Code | Name | HTTP Status | Description |
 |------|------|-------------|-------------|
@@ -197,4 +197,4 @@ AppError (base)
 
 所有错误码在 `app/core/errors.py` 中注册为集中式注册表。域模块抛出类型化异常；中间件层捕获并映射为结构化 API 响应。
 
-[filled by F03, F05, F07; remaining: F08, F17]
+[filled by F03, F05, F07, F08, F17]

@@ -59,7 +59,7 @@
 | user_id | VARCHAR(255) | 任务所有者 |
 | metadata | JSONB | 可扩展的任务元数据 |
 
-### agent_trajectories — [TBD: filled by F11, F12]
+### agent_trajectories — [filled by F11, F12]
 
 存储 Agent 执行轨迹，用于可观测性和评估。
 
@@ -116,7 +116,7 @@
 | `session_ctx:{session_id}` | HASH | `ContextSettings.redis_cache_ttl`（默认 3600s） | 会话上下文缓存（F09：由 `ContextManager` 管理，消息追加时失效） |
 | `task_status:{task_id}` | HASH | 任务 TTL | 异步任务状态 |
 
-## Qdrant 集合 — [TBD: filled by F05]
+## Qdrant 集合 — [filled by F05]
 
 详细的向量存储 Schema 见 `docs/04-kb/QDRANT_COLLECTION_CONFIG.md`。
 

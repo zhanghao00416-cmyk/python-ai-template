@@ -9,65 +9,40 @@
   - 架构文档 25 个 `docs/**/*.md` + `ARCHITECTURE.md`
   - 工单系统 23 条（F15→F15a/b/c）+ 模板 + 生成脚本
   - configs（default.yaml + models.yaml + agents.yaml）
-  - **F01 已 passing**：13/13 测试通过
-  - **F02 已 passing**：42/42 测试通过（9 集成跳过需 PG/Redis）
-  - **F03 已 passing**：49 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F04 已 passing**：51 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F05 已 passing**：52 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F06 已 passing**：32 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F07 已 passing**：47 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F08 已 passing**：46 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F09 已 passing**：57 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F10 已 passing**：64 单元测试通过；init.ps1 7/7；架构 6/6 pass
-  - **F11 已 passing**：64 单元测试通过；全量 504 passed；架构合规通过
-- **F12 已 passing**：49 单元测试通过；全量 553 passed；架构合规 6/6
-- F11 实现内容：
-  - `app/agent/state.py`：AgentState 枚举（7 状态）+ 状态转换规则（含自循环）+ transition()
-  - `app/agent/trajectory.py`：TokenUsage / ToolCall / TrajectoryEntry / AgentResult
-  - `app/agent/base.py`：BaseAgent ABC（run/think/act/observe/should_continue）
-  - `app/agent/react.py`：ReactAgent ReAct 循环（注入 think_fn、max_iterations、token 累积）
-  - `app/schemas/agent.py`：AgentRunRequest/Response、TrajectoryStep/Detail
-  - `app/domain/agent_orchestration/repo.py`：AgentTrajectoryRepo 持久化
-  - `app/domain/agent_orchestration/service.py`：AgentOrchestrationService 业务编排
-  - `app/api/v1/agent.py`：POST /agent/run + GET /agent/trajectories + GET /agent/trajectories/{task_id}
-  - `prompts/agents/react_template.md`：ReAct prompt 模板
-  - `tests/test_11_agent.py`：64 项测试
+  - **F01-F21 全部 passing**（22/22）
+  - F21 实现内容：
+    - `Dockerfile`：多阶段构建（builder+runtime）、非 root 用户、HEALTHCHECK
+    - `docker-compose.yml`：4 服务（postgres/redis/qdrant/app）+ app healthcheck + depends_on conditions + 只读 volumes
+    - `app/services/health_service.py`：新增 `check_llm()` 返回熔断器状态
+    - `app/api/v1/health.py`：响应含 `dependencies.llm.channels`
+    - `tests/test_f21_deployment.py`：26 项测试
+    - `docs/02-engineering/DEPLOYMENT_GUIDE.md`：8 处 TBD→filled
 - **本轮跑过的验证**：
-  - `pytest tests/` — 553 passed, 9 skipped
+  - `pytest tests/` — 817 passed, 10 skipped
+  - `ruff check app/` — 全通过
   - 架构合规测试通过
-
-## 本轮改动（2026-06-04 F12）
-
-- **F12 实现**：
-  - 新建 `app/agent/orchestrator.py`（OrchestratorAgent + SubTask/SubTaskResult + DebateStrategy/DebateRound/DebateResult）
-  - 修改 `app/agent/__init__.py`（导出 6 个新符号）
-  - 修改 `app/domain/agent_orchestration/service.py`（_create_engine orchestrator 支持 + _build_sub_agents + _load_orchestrator_config）
-  - 新建 `tests/test_12_multi_agent.py`（49 项测试）
-  - 更新 `docs/02-engineering/AGENT_SPEC.md`（F11+F12 TBD→filled）
-  - 更新 `evaluator-rubric.md`（F12 Accept 记录）
-  - 更新 `feature_list.json`（F12→passing, F13→in_progress）
-  - 更新 `progress.md`（F12 完成，下一 F13）
+  - init.ps1 7/7
 
 ## 仍损坏或未验证
 
 - **外部依赖**：PG/Redis/Qdrant 未实际运行（集成测试跳过，本地 `docker compose up` 后可验证）
-- F12 scope 外的功能均 not_started（F13 已 in_progress）
 
 ## 下一步最佳动作
 
 | 字段 | 值 |
 |------|-----|
-| **feature_id** | `F13` |
-| **active_ticket** | `工单/F13_workflow_dag_engine.md` |
-| **从哪开始** | 工单 F13 **阶段 1**（只读，禁止写代码） |
-| **不要动** | 勿跳阶段；勿口头改功能（走变更单） |
+| **feature_id** | `—`（全部完成） |
+| **active_ticket** | `—` |
+| **从哪开始** | 项目进入 **maintain** 阶段 |
+| **不要动** | 如需新增功能，走变更流程（`docs/00-meta/CHANGE_WORKFLOW.md`） |
 
 ## 下一会话开场白（上班复制这一条）
 
 ```text
-按 AGENTS.md 0.1 启动，执行 progress.md 中的 active 任务（工单 F13 Workflow DAG 引擎）。
-先运行 init.ps1，再读 FACT_REGISTRY、ARCHITECTURE、WORKFLOW_SPEC、DEPENDENCY_MAP。
-严格阶段 1 只读，首段约束摘要 ≥5 条，输出阶段 1 交付物（含差异表）。
+按 AGENTS.md 0.1 启动，读取 progress.md 确认当前状态。
+F01-F21 全部 passing，项目进入 maintain 阶段。
+如需新增功能，请走变更流程（docs/00-meta/CHANGE_WORKFLOW.md）。
+如需修复 bug，请走 hotfix 流程。
 ```
 
 ## 若要新加/改接口（备忘）
@@ -92,16 +67,11 @@ cd C:\path\to\python-ai-template
 
 | 工单 | 阶段 | 备注 |
 |------|------|------|
-| F01 项目骨架 | **passing** | 13/13 测试通过 |
-| F02 数据库模型+Redis | **passing** | 42/42 测试通过，9 集成跳过 |
-| F03 错误体系+中间件 | **passing** | 49 单元测试通过，架构 6/6 |
-| F04 LLM Gateway | **passing** | 51 单元测试通过，架构 6/6 |
-| F05 向量库+Qdrant | **passing** | 52 单元测试通过，架构 6/6 |
-| F06 SSE 流式服务 | **passing** | 32 单元测试通过，架构 6/6 |
-| F07 异步任务队列 | **passing** | 47 单元测试通过，架构 6/6 |
-| F08 Prompt 管理器 | **passing** | 46 单元测试通过，架构 6/6 |
-| F09 上下文管理器 | **passing** | 57 单元测试通过，架构 6/6 |
-| F10 Tools 注册中心 | **passing** | 64 单元测试通过，架构 6/6 |
-| F11 Agent 基类+状态机 | **passing** | 64 单元测试通过，全量 504 passed |
-| F12 多 Agent 协作 | **passing** | 49 单元测试通过，全量 553 passed |
-| F13 Workflow DAG 引擎 | **in_progress** | 下一 session 从阶段1开始 |
+| F01-F21 | **passing** | 全部 22 项功能完成 |
+
+## 项目里程碑
+
+- **2026-06-02**：Harness 建立（AGENTS.md / progress.md / feature_list.json / 工单系统 / DEPENDENCY_MAP）
+- **2026-06-04**：F01-F13 完成（骨架 → 数据库 → 错误体系 → LLM Gateway → 向量库 → SSE → 任务队列 → Prompt → 上下文 → Tools → Agent → 多 Agent → Workflow）
+- **2026-06-05**：F14-F21 完成（Chat → 知识库文档管理 → RAG查询 → E2E联调 → 意图识别 → Prompt管理API → 可观测性 → 评估框架 → 认证限流 → Docker部署）
+- **总计**：817 tests pass, 10 skipped; 架构合规 6/6; ruff check 全通过

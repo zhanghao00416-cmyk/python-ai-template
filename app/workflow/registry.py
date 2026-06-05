@@ -109,11 +109,11 @@ class WorkflowRegistry:
         """
         try:
             return self._workflows[name]
-        except KeyError:
+        except KeyError as exc:
             raise make_error(
                 ERROR_CODE_WORKFLOW_NODE_NOT_FOUND,
                 f"Workflow '{name}' not registered",
-            )
+            ) from exc
 
     def get_or_none(self, name: str) -> StateGraph | None:
         """Retrieve by name; return ``None`` if not found."""

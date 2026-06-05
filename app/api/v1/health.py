@@ -25,19 +25,21 @@ async def health_check(request: Request) -> dict:
 
     from app.bootstrap import get_uptime
     from app.core.constants import APP_VERSION
-    from app.services.health_service import check_database, check_redis, check_qdrant
+    from app.services.health_service import check_database, check_redis, check_qdrant, check_llm
 
     db_detail = await check_database()
     redis_detail = await check_redis()
     qdrant_detail = await check_qdrant()
+    llm_detail = await check_llm()
 
     db_status = db_detail["status"]
     redis_status = redis_detail["status"]
     qdrant_status = qdrant_detail["status"]
+    llm_status = llm_detail["status"]
 
     if db_status == "error":
         overall = "error"
-    elif redis_status == "degraded" or qdrant_status == "degraded":
+    elif redis_status == "degraded" or qdrant_status == "degraded" or llm_status == "degraded":
         overall = "degraded"
     else:
         overall = "ok"
@@ -50,6 +52,7 @@ async def health_check(request: Request) -> dict:
             "database": db_detail,
             "redis": redis_detail,
             "qdrant": qdrant_detail,
+            "llm": llm_detail,
         },
     }
 

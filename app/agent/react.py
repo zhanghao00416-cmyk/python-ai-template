@@ -11,6 +11,7 @@ Dependency: app/agent/base.py, app/agent/state.py, app/agent/trajectory.py
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from app.agent.base import BaseAgent
@@ -82,6 +83,8 @@ class ReactAgent(BaseAgent):
                 max_iterations=self.max_iterations,
             )
 
+            step_start = time.perf_counter()
+
             # --- THINKING ---
             self._set_state(AgentState.THINKING)
             thought, tool_call, token_usage = await self.think(
@@ -98,6 +101,8 @@ class ReactAgent(BaseAgent):
             if tool_call is None:
                 self._set_state(AgentState.DONE)
                 self._record(AgentState.DONE, thought=thought)
+                duration = time.perf_counter() - step_start
+                self._record_step(duration)
                 logger.info(
                     "agent.react.done",
                     agent_name=self.name,
@@ -117,6 +122,9 @@ class ReactAgent(BaseAgent):
                 AgentState.OBSERVING,
                 observation=tool_result,
             )
+
+            duration = time.perf_counter() - step_start
+            self._record_step(duration)
 
             # Feed observation back as next input
             current_input = observation_text
